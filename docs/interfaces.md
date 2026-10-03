@@ -103,10 +103,9 @@ R(45): optimum is below 45 deg; probe 35"). That shows the agent narrowing the a
 
 ## 2-minute demo script
 
-| Time | Show | Source |
-|---|---|---|
-| 0:00–0:20 | The question, plus the literature warning that "drag lowers the angle" is not obvious | Q1, F4 |
-| 0:20–0:40 | Agent graph (planner → literature/hypothesis/experiment/analysis + safety gate), H1–H3 on the board | YAML, H entries |
-| 0:40–1:15 | 3D: the drag probe's angle search replayed; then five objects on Earth/Mars/Venus flying different trajectories that land at the same optimal angle | R2 / R3 search traces |
-| 1:15–1:40 | "Predicted 22.9°, measured 25.2°: MISS" → simple laws fail | P1, N5 |
-| 1:40–2:00 | Decision D6 "escalate" → new law predicts the next experiments → hold-out max error 0.03°; benchmark 2.9× fewer simulations | D6, N8–N13, benchmark |
+Moved to [requirements.md §8](requirements.md#8-demo-flow-2-minutes-acceptance-test-for-the-whole-product)
+(now includes the course, chat and theme). Record ids it relies on in the example run: Q1, F4
+(question and literature warning), R2/R3 (search traces to replay), P1 → N5 (the failed
+prediction), D6 (escalation), N8–N13 (prospective hits and hold-out).
+
+Planned HTTP endpoints for the backend are listed in [requirements.md §5](requirements.md#5-ai-chat-with-omnigent-frontendsrccomponentschat-backendappagents).
