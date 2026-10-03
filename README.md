@@ -1,152 +1,153 @@
-# Hack-Nation 7th: Physics AI Lab
+# Radiative Cooling AI Lab
 
-An AI-run physics laboratory for the **Agentic Scientific Discovery** challenge. Specialist
-agents, orchestrated by **Omnigent**, investigate one physics question on a simulator. They
-form hypotheses, design and run experiments, grade results, and **change their next experiment
-because of what they measured**:
+An Omnigent-orchestrated AI lab that designs passive daytime radiative-cooling coatings: thin multilayer films that cool a surface below air temperature in direct sunlight, using no electricity.
+
+Built for the **Agentic Scientific Discovery** challenge (Hack-Nation 7th Global AI Hackathon × Databricks Omnigent).
+
+> Status: in development. Numbers marked `TBD` are filled in only after they are measured and reproducible.
+
+## Research question
+
+Can an agentic AI lab design a coating with **at most 5 layers**, made only of **cheap, common materials**, that matches or beats the net cooling power of the 7-layer Stanford design ([Raman et al., Nature 2014](https://www.nature.com/articles/nature13883)), and find it with fewer simulations than standard automated search?
+
+## Why it matters
+
+- Radiative cooling sends heat to outer space through the atmosphere's transparent window at 8–13 µm while reflecting sunlight. No power, no refrigerant.
+- The Stanford benchmark: 7 layers of HfO2/SiO2 on silver, 97% solar reflectance, 4.9 °C below ambient under >850 W/m² sunlight, 40.1 W/m² cooling power at ambient temperature.
+- The bottleneck we attack: choosing materials, order and thicknesses is a huge design space explored slowly by intuition and trial and error.
+
+## Discovery loop
 
 ```
 Question -> Evidence -> Hypothesis -> Experiment -> Result -> Updated decision -> Next experiment
 ```
 
-**Question.** For a projectile with quadratic air drag, how does the range-maximising launch
-angle θ\* depend on speed, mass, size, drag coefficient, air density and gravity? Is there a
-compact law that predicts θ\* for unseen conditions within 0.1°?
+1. **Literature agent** collects known designs and benchmark numbers, with citations.
+2. **Control:** the lab reproduces the Stanford design in our simulator. No design claims until it passes.
+3. **Hypothesis agent** proposes material stacks with a physical rationale.
+4. **Planner** writes at least two candidate tests, then picks one by expected gain, cost and budget.
+5. **Simulator tools** evaluate the design (transfer-matrix method) and tune layer thicknesses.
+6. **Analyst** marks the hypothesis supported or refuted and redirects the next round.
+7. **Safety / reviewer** checks every claim is backed by the record and requests human approval before any fabrication proposal.
 
-**What the lab finds in one autonomous run** (≈2 s, 651 simulations; [full report](docs/results/example-run/report.md)):
+Every step is written to a shared research record (`runs/<run_id>/record.jsonl`), so each decision can be traced back to its evidence.
 
-| Step | Evidence | Decision it caused |
-|---|---|---|
-| Vacuum control | θ\* = 45.000°, range error 5e-15 | simulator trusted → test drag |
-| Drag probe | θ\* = 43.5°, 40.9°, 37.4° for C_d = 0.1, 0.35, 1.0 | H1 "always 45°" **refuted** → look for a parameter reduction |
-| Dimensional test | 5 objects on Earth/Mars/Venus, speeds 10–218 m/s, same β → identical θ\*; same speed → 14.5° spread | 6 inputs collapse to one number β = ρC_dA v0²/(2mg) |
-| Prediction at β = 100 | best simple law missed by 2.2° | **escalate** to richer laws |
-| Model discrimination | `cot θ* = 1 + 0.2565·ln(1 + 0.80β)` predicts the next two experiments before they run | stop scanning |
-| Hold-out | 10 random unseen physical conditions, max error 0.028° | conclusion, **pending human review** |
+## Agents
 
-**Measured speed-up** ([benchmark](docs/results/benchmark.md)): to map θ\*(β) within 0.1°, the
-lab used **2.9× fewer simulations** than the cheapest manual grid that meets the target (651 vs
-1,870), with 0 human decisions vs 17. One optimum takes 22 simulations instead of 110 for a
-manual sweep, and is 25× more precise. The baseline was given the β reduction for free. We
-report the measured factor, not a 10× claim.
+| Agent | Decision it owns | Tools |
+| --- | --- | --- |
+| Supervisor | What happens next; when to stop | All sub-agents, `read_record` |
+| Literature agent | Known designs, benchmark numbers, citations | `search_papers`, `write_record` |
+| Hypothesis agent | Which materials, in what order, and why | `list_materials`, `material_properties`, `write_record` |
+| Planner | Which of 2+ candidate tests to run within budget | `read_record`, `budget_left`, `write_record` |
+| Analyst | Supported or refuted; where to go next | `read_record`, `compare_to_benchmark`, `write_record` |
+| Safety / reviewer | Needs human approval? Are claims backed? | `read_record`, `propose_fabrication` (gated) |
 
-## Quick start
+### Policies (enforced in code, not prompts)
 
-```bash
-uv venv .venv --python 3.12
-uv pip install -e ".[dev]"
-python -m physics_lab discover            # autonomous run, narrated; writes runs/<time>/record.json + report.md
-python -m physics_lab simulate --params '{"initial_velocity": 30, "drag_coefficient": 0.4}' --trajectory
-python -m physics_lab benchmark           # AI lab vs manual protocol
-pytest                                    # 28 tests: physics vs theory, analysis, loop, tools, policy
+| Policy | Rule |
+| --- | --- |
+| `budget_cap` | DENY simulations once the evaluation budget is used |
+| `control_first` | DENY design simulations until the Stanford control has passed |
+| `fabrication_gate` | ASK a human before any fabrication proposal |
+
+## Physics model
+
+Net cooling power, the number every experiment is judged on:
+
+```
+P_net(T) = P_rad(T) - P_atm(T_amb) - P_sun - P_cond+conv
 ```
 
-Omnigent (LLM agents, same tools, same record):
+- Optics: transfer-matrix method (`tmm` package) for flat multilayer stacks.
+- Material data (n, k): refractiveindex.info database.
+- Sunlight: AM1.5 spectrum (ASTM G173).
+- Sky: standard atmospheric transmittance model (stated assumption).
+- Constraint: at most 5 layers; materials SiO2, Al2O3, Si3N4, TiO2, MgF2 on Ag or Al.
 
-```bash
-uv pip install -e ".[omnigent]"
-omnigent setup                            # credentials (Anthropic API key or Claude subscription)
-PYTHONPATH=. omnigent run omnigent/physics_lab.yaml -p "Start the investigation."
-```
+## Measuring the speed-up
+
+All methods use the same simulator, search space, constraints and evaluation budget, over 10 seeds. Failed runs are kept.
+
+| Method | Description |
+| --- | --- |
+| Random search | Random materials, order and thicknesses |
+| Bayesian optimization | Optuna TPE over the same search space |
+| Agent lab | Omnigent agents choose materials; optimizer tunes thicknesses |
+| Ablation | Agent lab with analyst feedback turned off |
+
+- **Primary metric:** simulator evaluations needed to reach the Stanford design's net cooling power (computed in our simulator).
+- **Reported:** median evaluations, success rate, best P_net, and the speed-up with a 95% bootstrap confidence interval. We claim the lower bound.
+
+## Results
+
+| Metric | Value |
+| --- | --- |
+| Control: Stanford design, solar reflectance (ours vs paper) | TBD vs 97% |
+| Control: cooling power at ambient (ours vs paper) | TBD vs 40.1 W/m² |
+| Best design found (layers, materials) | TBD |
+| Best net cooling power | TBD |
+| Speed-up vs random search (95% CI) | TBD |
+| Speed-up vs Bayesian optimization (95% CI) | TBD |
 
 ## Repository layout
 
-| Path | What | Owner |
-|---|---|---|
-| `physics_lab/physics/` | simulator (RK4, quadratic drag), closed-form controls, presets | science |
-| `physics_lab/experiments/` | experiment spec + runners (adaptive angle search, invariance test) | science |
-| `physics_lab/analysis/` | candidate laws, leave-one-out ranking, next-experiment selection | science |
-| `physics_lab/agents/autopilot.py` | deterministic specialist agents running the full loop (no LLM needed) | science |
-| `physics_lab/tools.py`, `policies.py` | Omnigent function tools + human-approval policy | science |
-| `physics_lab/record.py` | shared research record (lab notebook) every agent writes to | science |
-| `omnigent/physics_lab.yaml` | Omnigent supervisor + 4 specialist sub-agents | science |
-| `frontend/` (to add) | 3D world that replays experiments from the record | frontend team |
-| `backend/` (to add) | hosting, API around `physics_lab` | Tom |
+| Path | Contents | Owner |
+| --- | --- | --- |
+| `lab/physics.py` | `simulate_stack`, `optimize_thicknesses`, control | Person 4 |
+| `lab/tools.py` | Agent tools: record, papers, materials | Person 3, Person 4 |
+| `lab/policies.py` | Omnigent policies | Person 3 |
+| `lab/config.yaml` | Omnigent supervisor and sub-agents | Person 3 |
+| `lab/prompts/` | One prompt per agent | Person 3 |
+| `bench/` | Baselines and `run_all.py` | Person 1 |
+| `analysis/` | Statistics and the key chart | Person 2 |
+| `frontend/` | UI that replays `record.jsonl` | Person 2 |
+| `runs/` | Research records from lab runs | generated |
+| `results/benchmark.json` | Benchmark output | generated |
 
-## Docs
+## Quick start
 
-- [docs/science-spec.md](docs/science-spec.md): question, physics model, experiments, measurements, epistemic labels
-- [docs/agents.md](docs/agents.md): each agent's decision, tools, inputs and outputs; Omnigent setup
-- [docs/interfaces.md](docs/interfaces.md): JSON contracts for the backend and the 3D frontend, plus a 2-minute demo script
-# Physics Study 3D
-
-Study platform for visualizing 3D physics problems, with AI agents (Databricks OmniAgent) as a tutor.
-
-## Structure
-
-```
-.
-├── frontend/                 Vite + React + TypeScript + Three.js (react-three-fiber) → Vercel
-│   └── src/
-│       ├── scenes/           3D physics scenes (one per problem type)
-│       ├── components/       UI: controls, panels, tutor chat
-│       ├── lib/              Pure physics/math functions (unit-tested)
-│       └── api/              Backend client
-├── backend/                  FastAPI (Python 3.12) → Render
-│   ├── app/
-│   │   ├── main.py           App entry, CORS, /health
-│   │   ├── api/              HTTP routes
-│   │   ├── agents/           OmniAgent config + orchestration
-│   │   └── core/             Settings, rate limiting, shared utilities
-│   └── tests/
-├── .github/workflows/ci-cd.yml
-└── render.yaml               Render Blueprint for the backend
-```
-
-## Local development
+Omnigent needs Python 3.12+, Node 22 and tmux. On Windows, use WSL.
 
 ```bash
-# Backend
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-cp .env.example .env
-uvicorn app.main:app --reload            # http://localhost:8000/health
+curl -fsSL https://omnigent.ai/install.sh | sh
+omni setup
 
-# Frontend (second terminal)
-cd frontend
-npm install
-cp .env.example .env
-npm run dev                               # http://localhost:5173 (proxies /api to :8000)
+python -m venv .venv && source .venv/bin/activate
+pip install tmm numpy scipy optuna
+
+pytest
+python -m lab.physics --control
+omni run ./lab/
+python bench/run_all.py --seeds 10 --budget 2000
+cd frontend && npm install && npm run dev
 ```
 
-## CI/CD
+## Data contracts
 
-| Event | What runs |
-|---|---|
-| Pull request | Frontend: typecheck, test, build. Backend: ruff lint + format check, pytest. Then a Vercel **preview** deploy. |
-| Push to `main` | Same checks, then Render deploy → Vercel production deploy → health-check smoke test. |
+Research record line (`runs/<run_id>/record.jsonl`):
 
-Nothing deploys unless every check passes.
+```json
+{"id": "H2", "kind": "hypothesis", "agent": "hypothesis_agent", "t": 1759532000.1, "based_on": ["L1", "R3"], "content": {"claim": "Al2O3 plus SiO2 covers 8-13 um", "status": "proposed"}}
+```
 
-## One-time deployment setup
+Kinds: `literature`, `hypothesis`, `plan`, `experiment`, `result`, `verdict`, `approval`.
+Status: `proposed`, `supported`, `refuted`, `inconclusive`.
 
-**1. Render (backend)**
-1. Render dashboard → New → Blueprint → select this repo (uses `render.yaml`).
-2. Fill in the env vars it prompts for (`FRONTEND_ORIGINS` = your Vercel URL, API keys).
-3. Service → Settings → Deploy Hook → copy the URL.
+## Limitations
 
-**2. Vercel (frontend)**
-1. Import the repo in Vercel, set **Root Directory = `frontend`**.
-2. Disable Vercel's own Git auto-deploys (Settings → Git → Ignored Build Step: `exit 0`) so GitHub Actions controls deploys.
-3. Project env var: `VITE_API_URL` = your Render URL.
-4. Create a token: Account Settings → Tokens.
-5. Get org/project IDs: run `npx vercel link` locally, then read `.vercel/project.json`.
+- Flat, ideal layers; no surface roughness or fabrication defects.
+- Simplified sky model; real cooling depends on humidity, clouds and wind.
+- Simulated results only. The best design must be fabricated and measured outdoors before any real-world claim.
+- Agent-generated hypotheses are labeled as hypotheses until a simulation supports them.
 
-**3. GitHub (Settings → Secrets and variables → Actions)**
+## Next experiment
 
-| Name | Type | Value |
-|---|---|---|
-| `VERCEL_TOKEN` | Secret | Vercel token |
-| `VERCEL_ORG_ID` | Secret | from `.vercel/project.json` |
-| `VERCEL_PROJECT_ID` | Secret | from `.vercel/project.json` |
-| `RENDER_DEPLOY_HOOK_URL` | Secret | Render deploy hook |
-| `BACKEND_URL` | Variable | e.g. `https://physics-study-api.onrender.com` |
+Fabricate the best constrained design (e.g. sputtering) and measure its temperature against ambient outdoors next to a reference sample, after human approval.
 
-Optional: Settings → Branches → protect `main`, require the `frontend` and `backend` checks.
+## References
 
-## Cost notes
-
-- Render free: sleeps after 15 min idle (~1 min cold start). Switch `plan` to `starter` ($7/mo) in `render.yaml` before demo day.
-- Set hard spending caps on every LLM API key.
-- Bright Data (`BRIGHTDATA_API_TOKEN`) is optional, for agent web search/scraping only.
+- Raman, A. P. et al. Passive radiative cooling below ambient air temperature under direct sunlight. *Nature* 515, 540–544 (2014). https://www.nature.com/articles/nature13883
+- Radiative cooling technology with artificial intelligence (review). https://pmc.ncbi.nlm.nih.gov/articles/PMC11612785/
+- Design of a highly selective radiative cooling structure accelerated by materials informatics. *Optics Letters*. https://opg.optica.org/ol/abstract.cfm?URI=ol-45-2-343
+- Omnigent. https://github.com/omnigent-ai/omnigent
