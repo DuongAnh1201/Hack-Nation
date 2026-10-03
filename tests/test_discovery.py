@@ -136,3 +136,17 @@ def test_benchmark_runs_cleanly(capsys):
     run_benchmark()
     captured = capsys.readouterr()
     assert "2.9x fewer simulations" in captured.out
+
+
+def test_omnigent_yaml_loads_cleanly():
+    """Verify that Omnigent's loader parses omnigent/physics_lab.yaml and resolves all tools and policies."""
+    import omnigent
+    agent_def = omnigent.load_agent_def("omnigent/physics_lab.yaml")
+    assert agent_def.name == "physics_ai_lab"
+    assert "experiment_gate" in agent_def.policies
+    assert "literature_agent" in agent_def.tools
+    assert "hypothesis_agent" in agent_def.tools
+    assert "experiment_planner" in agent_def.tools
+    assert "analysis_agent" in agent_def.tools
+    assert "safety_agent" in agent_def.tools
+
