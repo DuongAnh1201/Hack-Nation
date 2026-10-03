@@ -1,0 +1,22 @@
+# Render Blueprint: New > Blueprint in the Render dashboard, point it at this repo.
+services:
+  - type: web
+    name: physics-study-api
+    runtime: python
+    plan: free # switch to "starter" ($7/mo) before demo day to remove cold starts
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: false # deploys are triggered by GitHub Actions after CI passes
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: BRIGHTDATA_API_TOKEN
+        sync: false
