@@ -1,0 +1,136 @@
+name: physics_ai_lab
+description: "Autonomous Agentic Physics Discovery Lab investigating optimal projectile launch angles under quadratic drag."
+
+version: "1.0"
+
+settings:
+  max_tool_calls: 300
+  cost_budget_usd: 15.0
+  check_in_cost_usd: 10.0
+  policy_modules:
+    - physics_lab.policies
+
+policies:
+  - name: experiment_gate
+    module: physics_lab.policies
+    handler: experiment_gate
+
+tools:
+  - name: get_established_facts
+    module: physics_lab.tools
+    handler: get_established_facts
+    description: "Retrieve established physics facts with citations regarding projectile motion and drag."
+
+  - name: search_literature
+    module: physics_lab.tools
+    handler: search_literature
+    description: "Search OpenAlex for academic literature, citations, and prior art."
+
+  - name: record_note
+    module: physics_lab.tools
+    handler: record_note
+    description: "Record an observation, assumption, or question in the shared research record."
+
+  - name: propose_hypothesis
+    module: physics_lab.tools
+    handler: propose_hypothesis
+    description: "Propose a testable hypothesis or candidate physical law."
+
+  - name: update_hypothesis
+    module: physics_lab.tools
+    handler: update_hypothesis
+    description: "Update the status of a hypothesis (supported, refuted, inconclusive) with rationale."
+
+  - name: review_experiment
+    module: physics_lab.tools
+    handler: review_experiment
+    description: "Conduct safety and compute review of an experimental specification before execution."
+
+  - name: run_experiment
+    module: physics_lab.tools
+    handler: run_experiment
+    description: "Execute an approved experiment specification and record measurements."
+
+  - name: simulate_once
+    module: physics_lab.tools
+    handler: simulate_once
+    description: "Run a single projectile simulation and return measurements and trajectory frames."
+
+  - name: fit_laws
+    module: physics_lab.tools
+    handler: fit_laws
+    description: "Fit candidate physical laws against empirical measurements using Leave-One-Out cross-validation."
+
+  - name: suggest_next_experiment
+    module: physics_lab.tools
+    handler: suggest_next_experiment
+    description: "Analyze model disagreement to suggest the most informative next experimental condition."
+
+  - name: record_decision
+    module: physics_lab.tools
+    handler: record_decision
+    description: "Record an executive scientific decision justifying the next step based on prior evidence."
+
+  - name: record_conclusion
+    module: physics_lab.tools
+    handler: record_conclusion
+    description: "Record the final scientific conclusion with holdout error and stated limitations."
+
+  - name: read_record
+    module: physics_lab.tools
+    handler: read_record
+    description: "Read an entry or view a summary of the shared research record."
+
+supervisor:
+  name: research_planner
+  role: "Scientific director leading the discovery investigation, deciding what to test next and when to conclude."
+  tools:
+    - record_note
+    - record_decision
+    - record_conclusion
+    - read_record
+  subagents:
+    - literature_agent
+    - hypothesis_agent
+    - experiment_planner
+    - safety_agent
+    - analysis_agent
+
+agents:
+  - name: literature_agent
+    role: "Literature specialist who establishes baseline facts, identifies prior knowledge, and queries academic literature."
+    tools:
+      - get_established_facts
+      - search_literature
+      - record_note
+      - read_record
+
+  - name: hypothesis_agent
+    role: "Theoretical physicist who formulates testable mathematical hypotheses and parameter reduction theories."
+    tools:
+      - propose_hypothesis
+      - fit_laws
+      - read_record
+
+  - name: experiment_planner
+    role: "Experimental designer who constructs parameter sets, controls, and conditions to discriminate hypotheses."
+    tools:
+      - review_experiment
+      - run_experiment
+      - simulate_once
+      - suggest_next_experiment
+      - read_record
+
+  - name: safety_agent
+    role: "Safety and ethics officer verifying compute budgets, parameter validity, and human approval gates."
+    tools:
+      - review_experiment
+      - read_record
+
+  - name: analysis_agent
+    role: "Data analyst and statistician who grades hypotheses, fits candidate laws, and identifies model disagreement."
+    tools:
+      - fit_laws
+      - update_hypothesis
+      - suggest_next_experiment
+      - read_record
