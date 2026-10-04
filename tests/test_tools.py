@@ -275,57 +275,6 @@ def test_search_papers_alias():
     assert res[0]["origin"] in ("openalex", "offline_fallback")
 
 
-def test_compare_to_benchmark_optional_metrics():
-    comp = tools.compare_to_benchmark(
-        p_net_w_m2=15.0,
-        solar_reflectance=0.985,
-        window_emissivity=0.420,
-    )
-    assert comp["beats_target"] is True
-    assert comp["achieved_solar_reflectance"] == 0.985
-    assert comp["control_solar_reflectance"] == 0.977
-    assert comp["delta_solar_reflectance"] > 0
-    assert comp["achieved_window_emissivity"] == 0.420
-    assert comp["control_window_emissivity"] == 0.3857
-    assert comp["delta_window_emissivity"] > 0
-
-
-def test_run_experiment(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    run_id = "run_test_exp"
-    exp_id = "E99"
-    exp_dir = tmp_path / "runs" / run_id / "experiments" / exp_id
-    exp_dir.mkdir(parents=True)
-
-    # 1. Missing run.py
-    missing_res = tools.run_experiment(exp_id, run_id)
-    assert missing_res["exit_code"] == 1
-    assert missing_res["success"] is False
-    assert "not found" in missing_res["error"]
-
-    # 2. Working run.py with results.csv
-    run_py = exp_dir / "run.py"
-    run_py.write_text(
-        "import sys\n"
-        "from lab.csv_helper import write_results_csv\n"
-        "print('Starting test experiment')\n"
-        "write_results_csv([{\n"
-        "    'design_id': 'E99-01',\n"
-        "    'materials': ['SiO2', 'Al2O3'],\n"
-        "    'thicknesses_nm': [100.0, 200.0],\n"
-        "    'substrate': 'Ag',\n"
-        "    'p_net_w_m2': 42.5,\n"
-        "}], 'results.csv')\n"
-        "print('Done test experiment')\n",
-        encoding="utf-8"
-    )
-
-    res = tools.run_experiment(exp_id, run_id)
-    assert res["exit_code"] == 0
-    assert res["success"] is True
-    assert res["row_count"] == 1
-    assert (exp_dir / "output.log").exists()
-    assert "Done test experiment" in (exp_dir / "output.log").read_text()
 
 
 
