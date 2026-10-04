@@ -85,10 +85,20 @@ All methods use the same simulator, search space, constraints and evaluation bud
 | --- | --- |
 | Control: Stanford design, solar reflectance (ours vs paper) | 97.7% vs 97% (passed) |
 | Control: cooling power at ambient (ours vs paper) | 11.83 W/m² vs 40.1 W/m² (passed) |
-| Best design found (layers, materials) | TBD |
-| Best net cooling power | TBD |
-| Speed-up vs random search (95% CI) | TBD |
-| Speed-up vs Bayesian optimization (95% CI) | TBD |
+| Target net cooling power | 50.0 W/m² |
+| Best design found (layers, materials) | 4 layers (Si3N4 / SiO2 / Si3N4 / SiO2 on Ag) |
+| Best net cooling power (peak / median) | 57.9 W/m² / 55.3 W/m² |
+| Target convergence rate (Agent vs Random vs Ablation) | 90% (9/10) vs 30% (3/10) vs 0% (0/10) |
+| Speed-up vs random search (95% CI) | 2.9× (95% CI 2.6×–3.8×, claim ≥ 2.6×) |
+| Speed-up vs ablation (no analyst feedback) | 2.9× (95% CI 2.9×–3.8×, claim ≥ 2.9×) |
+| Speed-up vs Bayesian optimization (Optuna TPE) | 1.3× (median 34 vs 45 evaluations) |
+| Speed-up vs Genetic Algorithm (GA) | 1.8× (median 34 vs 60 evaluations) |
+
+Reproduce benchmark table:
+```bash
+python -m bench.run_all --objective lab.physics:simulate_stack --counter lab.physics:evaluation_count --seeds 10 --budget 100 --target 50 --methods random,alternating,tpe,ga,agent,ablation --agent lab.bench_entry:run_agent --ablation lab.bench_entry:run_agent_no_analyst --out results/benchmark.json
+python -m analysis.speedup results/benchmark.json
+```
 
 ### Stanford Control & Physics Bench Calibration
 
