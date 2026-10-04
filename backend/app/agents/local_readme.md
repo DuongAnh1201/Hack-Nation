@@ -1,79 +1,117 @@
 # Agents: Radiative Cooling Lab
 
 The Omnigent bundle for the lab. The LLM agents make every scientific decision. Python tools only
-run deterministic work (simulation, record I/O, budget counting) and never choose what to do next.
-Do not add a LangChain, LangGraph or Python loop that decides for the agents.
+run deterministic work (simulation, record I/O, logging, budget counting) and never choose what to
+do next. Do not add a LangChain, LangGraph or Python loop that decides for the agents.
 
 ## Hierarchy
+
+Every department has exactly three agents: a Lead, a specialist and a secretary.
 
 ```
 radiative-cooling-lab (Lab Director / Supervisor)
 |
-+-- literature          Literature Lead        -> literature_web_search, literature_filter,
-|                                                literature_processing, literature_secretary
-+-- hypothesis          Hypothesis Lead        -> hypothesis_review, hypothesis_confidence,
-|                                                hypothesis_secretary
-+-- planning            Planning Lead          -> planning_exploration, planning_budget          (placeholder)
-+-- analysis            Analysis Lead          -> analysis_performance, analysis_failure         (placeholder)
-+-- review_safety       Review Lead            -> review_evidence_auditor, review_safety_approval (placeholder)
-+-- knowledge_memory    Knowledge Lead         -> knowledge_archivist, knowledge_curator,       (placeholder)
-                                                  knowledge_synthesizer
++-- literature          Literature Lead  -> literature_specialist,       literature_secretary
++-- hypothesis          Hypothesis Lead  -> hypothesis_specialist,       hypothesis_secretary
++-- planning            Planning Lead    -> planning_specialist,         planning_secretary          (placeholder)
++-- analysis            Analysis Lead    -> analysis_specialist,         analysis_secretary          (placeholder)
++-- review_safety       Review Lead      -> review_safety_specialist,    review_safety_secretary     (placeholder)
++-- knowledge_memory    Knowledge Lead   -> knowledge_memory_specialist, knowledge_memory_secretary  (placeholder)
 ```
 
-The Director only talks to Leads, and each Lead only talks to its own specialists. Knowledge &
-Memory turns the other departments' results into common knowledge for the next reasoning cycle.
-Departments marked placeholder still have their first-draft specialists and empty prompts.
+1 Lab Director, 6 Leads, 6 specialists, 6 secretaries. The Director only talks to Leads, and each
+Lead only talks to its own specialist and secretary. Placeholder departments have their decision
+defined but not their details.
 
 ## Decision ownership
 
-- **Specialists** investigate and advise. They return findings to their Lead and do not write
-  decisions to the research record.
-- **Department Leads** make their department's decision, write it to the record, and report to the
+- **The specialist** investigates and advises. It returns its result to the Lead and writes nothing
+  to the record or the logs.
+- **The Lead** makes the department's decision, writes it to the record, and reports to the
   Director.
+- **The secretary** writes the department's log entries. It logs what the Lead sends and never
+  changes it.
 - **The Lab Director** decides which department acts next and when the research stops. It does not
   make the departments' scientific decisions.
-- **Department secretaries** log the Lead's decision to the common knowledge base. They record
-  decisions and never change them.
+- **Every Lead reports back to the Director** when its department finishes: the decision and its
+  record IDs. Leads never call another department, so every handoff goes through the Director.
+
+## Log permissions
+
+Each department has two log levels in the lab log database:
+
+- **Department log:** the Lead's decisions and reports.
+- **Specialist log:** the specialist's results.
+
+| Agent | Department log | Specialist log |
+|---|---|---|
+| Lab Director | Read, all departments | No access |
+| Lead | Read, own department | Read, own department |
+| Secretary | Write, own department | Write, own department |
+| Specialist | No access | No access |
+
+No agent can read another department's specialist log. The Director gets detail by asking a Lead.
+These limits must be enforced by the log tools, not just by the prompts: each agent gets only the
+log tools its row allows.
+
+## Repeated results
+
+When a specialist returns a result that is already in the specialist log:
+
+1. The secretary logs it again, marked as a repeat of the earlier entry.
+2. The Lead decides whether a rerun could give a different result, e.g. the inputs, the evidence or
+   the search query changed since the earlier run.
+3. **Yes:** the Lead reruns the specialist and says what is different. A rerun with the same inputs
+   is not allowed.
+4. **No:** the Lead reports the repeat to the Director, and the lab moves to the next cycle.
+
+The Lead checks its own decisions against the department log the same way. The Director applies
+the same logic one level up: if a department's report repeats its department log, the Director
+calls it again only if something changed elsewhere in the lab; otherwise it moves to the next cycle.
 
 ## Defined departments
 
 **Literature:** decides which published evidence the lab accepts.
 
-1. `literature_web_search` finds candidate articles, only from Springer, Nature, IEEE and arXiv.
-2. `literature_filter` keeps the articles that match the problem statement.
-3. `literature_processing` extracts claims, numbers with units, and conditions.
-4. The Lead accepts or rejects findings and writes `literature` records.
-5. `literature_secretary` logs the decision to the common knowledge base.
-6. The Lead reports to the Director, who hands the findings to Hypothesis.
+1. `literature_specialist` searches Springer, Nature, IEEE and arXiv, filters the articles against
+   the problem statement, and extracts claims, numbers with units, and conditions.
+2. The Lead checks for repeats, then accepts or rejects findings and writes `literature` records.
+3. `literature_secretary` logs the specialist's result and the Lead's decision.
+4. The Lead reports to the Director, who decides which department acts next (usually Hypothesis).
 
 **Hypothesis:** decides which hypothesis the lab tests next.
 
-1. `hypothesis_review` checks earlier hypotheses against the new literature: consistent,
-   conflicting or no bearing.
-2. `hypothesis_confidence` scores each hypothesis from 0 to 1 and proposes new candidates.
-3. The Lead keeps, revises or replaces hypotheses and writes `hypothesis` records (status
-   `proposed`).
-4. `hypothesis_secretary` logs the decision to the common knowledge base.
+1. `hypothesis_specialist` checks earlier hypotheses against the new literature (consistent,
+   conflicting or no bearing), scores each from 0 to 1, and proposes new candidates.
+2. The Lead checks for repeats, then keeps, revises or replaces hypotheses and writes `hypothesis`
+   records (status `proposed`).
+3. `hypothesis_secretary` logs the specialist's result and the Lead's decision.
+4. The Lead reports to the Director.
 
 Open questions:
-- The common knowledge base format is not defined yet. Until it is, the secretaries return their
-  log entries to the Lead as text.
-- The per-department secretaries overlap with the Knowledge & Memory department's Archivist.
+- The lab log database and its tools are not built yet. Until they are, the secretaries return
+  their log entries to the Lead as text.
+- How the lab log relates to common knowledge: the Knowledge & Memory department needs to read the
+  logs, which the table above does not allow yet.
+- Reruns have no hard limit. A budget policy could cap them.
 
 ## Folder layout
 
 Every agent is a folder with two files. The folder nesting is the reporting line.
 
 ```
-agents/                      <- this folder is the Lab Director's bundle
-  config.yaml                Director: which departments it may call
-  prompt.md                  Director instructions
+agents/                          <- this folder is the Lab Director's bundle
+  config.yaml                    Director: which departments it may call
+  prompt.md                      Director instructions
   agents/
-    literature/              Department Lead
-      config.yaml            which specialists it may call
+    literature/                  Department Lead
+      config.yaml                its specialist and secretary
       prompt.md
       agents/
-        literature_web_search/   Specialist (no sub-agents)
+        literature_specialist/   (no sub-agents)
+          config.yaml
+          prompt.md
+        literature_secretary/    (no sub-agents)
           config.yaml
           prompt.md
 ```
@@ -82,8 +120,9 @@ Why prompts sit next to each config: Omnigent finds sub-agents at `agents/<name>
 `instructions: prompt.md` is only read from inside that agent's own folder. A path like
 `../prompts/x.md` falls back to literal text, so a shared `prompts/` folder does not work.
 
-Folder names are globally unique (`<department>_<role>`), so logs and the record show which
-department an agent belongs to. Keep the folder name and the `name:` in `config.yaml` the same.
+Folder names are globally unique (`<department>_specialist`, `<department>_secretary`), so logs and
+the record show which department an agent belongs to. Keep the folder name and the `name:` in
+`config.yaml` the same.
 
 ## Rollout status
 
@@ -91,7 +130,7 @@ We bring the hierarchy up one department at a time, and only after nested delega
 
 | Step | Wired | Check |
 |---|---|---|
-| 1 | Director -> `literature` -> its 2 specialists | Specialists' output reaches the Director in the Omnigent web session |
+| 1 | Director -> `literature` -> its specialist and secretary | The Lead's report reaches the Director in the Omnigent web session |
 | 2 | + `hypothesis`, `planning`, `analysis` | One full loop with a refuted hypothesis |
 | 3 | + `review_safety` | Fabrication proposals ask a human |
 | 4 | + `knowledge_memory` | Next cycle reads common knowledge |
@@ -103,31 +142,27 @@ We bring the hierarchy up one department at a time, and only after nested delega
 
 **Enable a department:** uncomment its line under `tools.agents` in [config.yaml](config.yaml).
 
-**Disable a specialist:** comment out its line under `tools.agents` in its Lead's `config.yaml`.
-The folder stays and can be turned back on later.
+**Change what a specialist does:** edit its `prompt.md`. Nothing else changes.
 
-**Add a specialist:**
-1. Copy any specialist folder, e.g. `agents/literature/agents/literature_filter/`, to a new folder
-   name in the same department.
+**Add an agent to a department:**
+1. Copy the department's specialist folder, e.g. `agents/literature/agents/literature_specialist/`,
+   to a new folder name in the same department.
 2. Set `name:` and `description:` in the copy's `config.yaml`, and rewrite its `prompt.md`.
-3. Add the folder name to the Lead's `tools.agents`.
+3. Add the folder name to the Lead's `tools.agents`, and mention it in the Lead's `prompt.md`.
 
-**Remove a specialist:** delete its folder and its line in the Lead's `tools.agents`.
-
-**Move a specialist to another department:** move the folder, then move its line between the two
-Leads' `tools.agents`.
+**Remove an agent:** delete its folder and its line in the Lead's `tools.agents`.
 
 None of these change the Director or the other departments.
 
 ## Prompt template
 
-Every `prompt.md` has the same sections, as the team plan requires:
+Lead prompts have: Decision you own, How you work, What to read from the record, What to write,
+Logs, Repeated results, Rules. Specialist and secretary prompts state what they do, their log
+access, and their rules. Every agent that writes to the record must "Cite the record IDs you based
+this on."
 
-- **Decision you own:** the one decision this agent makes.
-- **What to read from the record:** which entries in `runs/<run_id>/record.jsonl` it reads.
-- **What to write:** which record kinds it writes (`literature`, `hypothesis`, `plan`,
-  `experiment`, `result`, `verdict`, `approval`).
-- **Rules:** always "Cite the record IDs you based this on."
+Record kinds (shared contract): `literature`, `hypothesis`, `plan`, `experiment`, `result`,
+`verdict`, `approval`.
 
 ## Check the bundle
 
@@ -149,7 +184,8 @@ instead of the prompt text, its `prompt.md` is missing or misnamed.
 
 ## Tools
 
-The simulator (`simulate_stack`, `optimize_thicknesses`) and the record tools (`read_record`,
-`write_record`) are tools, not agents. Omnigent finds local tools in `tools/python/*.py` inside each
-agent's folder. [tools/literature_review.py](tools/literature_review.py) is not in that path yet, so
-Omnigent does not load it. Its location will be decided when the tools are wired up.
+The simulator (`simulate_stack`, `optimize_thicknesses`), the record tools (`read_record`,
+`write_record`) and the log tools are tools, not agents. Omnigent finds local tools in
+`tools/python/*.py` inside each agent's folder, which is also how log permissions are enforced:
+an agent can only call the tools in its own folder. [tools/literature_review.py](tools/literature_review.py)
+is not in that path yet, so Omnigent does not load it.

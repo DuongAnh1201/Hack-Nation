@@ -1,7 +1,7 @@
 spec_version: 1
-name: literature_secretary
+name: analysis_specialist
 description: >-
-  Keeps the Literature department's log in the lab log database.
+  Compares results with the benchmark and explains failures.
 
 executor:
   type: omnigent
