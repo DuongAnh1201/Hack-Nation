@@ -1,7 +1,7 @@
 spec_version: 1
-name: analysis_performance
+name: hypothesis_specialist
 description: >-
-  Compares results against the benchmark target.
+  Reviews hypotheses against new evidence and scores confidence for the Hypothesis Lead.
 
 executor:
   type: omnigent

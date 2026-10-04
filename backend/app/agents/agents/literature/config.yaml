@@ -12,7 +12,5 @@ instructions: prompt.md
 
 tools:
   agents:
-    - literature_web_search
-    - literature_filter
-    - literature_processing
+    - literature_specialist
     - literature_secretary

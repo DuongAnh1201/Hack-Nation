@@ -1,7 +1,7 @@
 spec_version: 1
-name: planning_exploration
+name: knowledge_memory_secretary
 description: >-
-  Proposes candidate tests and their expected gain.
+  Keeps the Knowledge department's log in the lab log database.
 
 executor:
   type: omnigent

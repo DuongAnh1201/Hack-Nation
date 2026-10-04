@@ -1,7 +1,7 @@
 spec_version: 1
-name: analysis_failure
+name: review_safety_specialist
 description: >-
-  Explains why a design or hypothesis failed.
+  Audits claims against records and flags actions that need human approval.
 
 executor:
   type: omnigent

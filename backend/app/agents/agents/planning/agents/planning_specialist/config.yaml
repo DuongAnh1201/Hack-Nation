@@ -1,7 +1,7 @@
 spec_version: 1
-name: literature_processing
+name: planning_specialist
 description: >-
-  Extracts claims, numbers and conditions from the kept articles.
+  Proposes 2+ candidate tests with expected gain and cost.
 
 executor:
   type: omnigent

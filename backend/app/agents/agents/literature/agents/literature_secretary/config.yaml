@@ -1,7 +1,7 @@
 spec_version: 1
 name: literature_secretary
 description: >-
-  Logs the Literature Lead's accepted findings to the common knowledge base.
+  Keeps the Literature department's log in the lab log database.
 
 executor:
   type: omnigent

@@ -1,7 +1,7 @@
 spec_version: 1
-name: review_evidence_auditor
+name: analysis_secretary
 description: >-
-  Checks that every claim cites record IDs that support it.
+  Keeps the Analysis department's log in the lab log database.
 
 executor:
   type: omnigent

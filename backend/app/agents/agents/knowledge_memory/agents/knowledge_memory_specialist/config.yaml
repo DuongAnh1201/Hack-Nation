@@ -1,7 +1,7 @@
 spec_version: 1
-name: knowledge_curator
+name: knowledge_memory_specialist
 description: >-
-  Removes duplicates and outdated or refuted knowledge.
+  Curates and summarizes the lab's findings into common knowledge.
 
 executor:
   type: omnigent

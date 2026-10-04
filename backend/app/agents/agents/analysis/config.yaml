@@ -1,7 +1,7 @@
 spec_version: 1
 name: analysis
 description: >-
-  Supported or refuted; where to go next.
+  Decides whether a hypothesis is supported, refuted or inconclusive.
 
 executor:
   type: omnigent
@@ -12,5 +12,5 @@ instructions: prompt.md
 
 tools:
   agents:
-    - analysis_performance
-    - analysis_failure
+    - analysis_specialist
+    - analysis_secretary

@@ -1,7 +1,7 @@
 spec_version: 1
-name: hypothesis_confidence
+name: planning_secretary
 description: >-
-  Scores confidence in hypotheses and proposes new candidates from the evidence.
+  Keeps the Planning department's log in the lab log database.
 
 executor:
   type: omnigent

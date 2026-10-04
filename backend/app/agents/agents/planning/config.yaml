@@ -1,7 +1,7 @@
 spec_version: 1
 name: planning
 description: >-
-  Which of 2+ candidate tests to run, within budget.
+  Decides which of 2+ candidate tests to run, within budget.
 
 executor:
   type: omnigent
@@ -12,5 +12,5 @@ instructions: prompt.md
 
 tools:
   agents:
-    - planning_exploration
-    - planning_budget
+    - planning_specialist
+    - planning_secretary
