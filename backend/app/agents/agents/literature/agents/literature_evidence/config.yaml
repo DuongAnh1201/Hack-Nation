@@ -1,0 +1,11 @@
+spec_version: 1
+name: literature_evidence
+description: >-
+  Extracts numbers and attaches citations to every claim.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md

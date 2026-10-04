@@ -1,0 +1,17 @@
+spec_version: 1
+name: knowledge_memory
+description: >-
+  What becomes persistent common knowledge for the next cycle.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
+
+tools:
+  agents:
+    - knowledge_archivist
+    - knowledge_curator
+    - knowledge_synthesizer

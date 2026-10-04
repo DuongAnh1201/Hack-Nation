@@ -1,0 +1,11 @@
+spec_version: 1
+name: literature_search
+description: >-
+  Finds relevant papers and prior designs.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md

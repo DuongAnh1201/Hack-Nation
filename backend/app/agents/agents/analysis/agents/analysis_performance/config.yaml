@@ -1,0 +1,11 @@
+spec_version: 1
+name: analysis_performance
+description: >-
+  Compares results against the benchmark target.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md

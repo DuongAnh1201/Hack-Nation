@@ -1,0 +1,16 @@
+spec_version: 1
+name: analysis
+description: >-
+  Supported or refuted; where to go next.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
+
+tools:
+  agents:
+    - analysis_performance
+    - analysis_failure

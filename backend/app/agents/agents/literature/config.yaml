@@ -1,0 +1,16 @@
+spec_version: 1
+name: literature
+description: >-
+  Known designs, benchmark numbers and citations.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
+
+tools:
+  agents:
+    - literature_search
+    - literature_evidence
