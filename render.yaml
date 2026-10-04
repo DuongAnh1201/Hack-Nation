@@ -12,6 +12,8 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.7"
+      - key: LAB_ALLOW_START
+        value: "1"
       - key: FRONTEND_ORIGINS
         sync: false
       - key: ANTHROPIC_API_KEY
