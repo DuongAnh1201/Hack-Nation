@@ -92,17 +92,18 @@ Every `prompt.md` has the same sections, as the team plan requires:
 
 ## Check the bundle
 
-Run this from this folder. It parses the whole tree with Omnigent's own loader and prints who can
-call whom:
+Run this from the repo root or this folder to verify the entire hierarchy and discovered tools:
 
 ```bash
-~/.local/share/uv/tools/omnigent/bin/python3 -c "
+python3 -c "
 from pathlib import Path
 from omnigent.spec.parser import parse
 def show(s, d=0):
-    print('  '*d + s.name, '->', s.tools.agents if s.tools else [])
+    lt = [t.name for t in s.local_tools]
+    ag = s.tools.agents if s.tools else []
+    print('  '*d + s.name, '->', ag, f'[local tools: {lt}]')
     for c in s.sub_agents: show(c, d+1)
-show(parse(Path('.')))"
+show(parse(Path('backend/app/agents')))"
 ```
 
 A malformed `config.yaml` makes this fail and names the file. If an agent prints its prompt path
@@ -110,7 +111,29 @@ instead of the prompt text, its `prompt.md` is missing or misnamed.
 
 ## Tools
 
-The simulator (`simulate_stack`, `optimize_thicknesses`) and the record tools (`read_record`,
-`write_record`) are tools, not agents. Omnigent finds local tools in `tools/python/*.py` inside each
-agent's folder. [tools/literature_review.py](tools/literature_review.py) is not in that path yet, so
-Omnigent does not load it. Its location will be decided when the tools are wired up.
+All deterministic function tools are implemented in [lab/tools.py](../../../../lab/tools.py) and exposed to Omnigent specialists via `@tool` wrappers in each agent's `tools/python/*.py`:
+
+- **Literature:**
+  - `literature_web_search`: `search_papers` (strictly queries Springer, Nature, IEEE, and arXiv with zero hallucination).
+  - `literature` Lead: `read_record`, `write_record`.
+- **Hypothesis:**
+  - `hypothesis_physics` & `hypothesis_materials`: `list_materials`, `material_properties`, `read_record`.
+  - `hypothesis` Lead: `read_record`, `write_record`.
+- **Planning:**
+  - `planning_exploration`: `list_materials`, `read_record`.
+  - `planning_budget`: `budget_left`, `read_record`.
+  - `planning` Lead: `read_record`, `write_record`.
+- **Analysis:**
+  - `analysis_performance`: `simulate_stack`, `optimize_thicknesses`, `compare_to_benchmark`, `read_record`.
+  - `analysis_failure`: `compare_to_benchmark`, `read_record`.
+  - `analysis` Lead: `read_record`, `write_record`.
+- **Review & Safety:**
+  - `review_evidence_auditor`: `read_record`.
+  - `review_safety_approval`: `budget_left`, `read_record`.
+  - `review_safety` Lead: `read_record`, `write_record`.
+- **Knowledge & Memory:**
+  - `knowledge_archivist`, `knowledge_curator`, `knowledge_synthesizer`: `read_record`.
+  - `knowledge_memory` Lead: `read_record`, `write_record`.
+- **Supervisor (Lab Director):**
+  - `read_record`.
+
