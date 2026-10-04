@@ -1,0 +1,11 @@
+spec_version: 1
+name: experiment_runner_secretary
+description: >-
+  Department Secretary: records experiment specifications and measurement results to the research record and common knowledge hub.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md

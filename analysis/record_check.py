@@ -29,7 +29,7 @@ KINDS = ("literature", "hypothesis", "plan", "experiment", "result", "verdict", 
 STATUSES = ("proposed", "supported", "refuted", "inconclusive")
 VERDICT_STATUSES = ("supported", "refuted", "inconclusive")
 DECISIONS = ("approved", "denied", "pending")
-AGENTS = ("supervisor", "literature_agent", "hypothesis_agent", "planner", "analyst", "safety")
+AGENTS = ("supervisor", "literature_agent", "hypothesis_agent", "planner", "experiment_runner", "analyst", "safety")
 CONTENT_REQUIRED = {
     "literature": ("claim", "source"),
     "hypothesis": ("claim", "status"),

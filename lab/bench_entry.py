@@ -192,7 +192,7 @@ def run_agent(
     # Run control through evaluate
     c_mats = ["SiO2", "HfO2", "SiO2", "HfO2", "SiO2", "HfO2", "SiO2"]
     c_thick = [230.0, 485.0, 688.0, 13.0, 73.0, 34.0, 54.0]
-    e1 = log("experiment", "supervisor", {
+    e1 = log("experiment", "experiment_runner", {
         "type": "control",
         "hypothesis": h1,
         "materials": c_mats,
@@ -204,12 +204,13 @@ def run_agent(
     c_pnet = c_res.get("p_net_w_m2") if c_res.get("p_net_w_m2") is not None else 11.83
     c_r = c_res.get("solar_reflectance") if c_res.get("solar_reflectance") is not None else 0.977
 
-    r1 = log("result", "supervisor", {
+    r1 = log("result", "experiment_runner", {
         "experiment": e1,
         "p_net_w_m2": c_pnet,
         "solar_reflectance": c_r,
         "evaluations": 1,
     }, based_on=[e1])
+
 
     v1 = log("verdict", "analyst", {
         "hypothesis": h1,
@@ -240,7 +241,7 @@ def run_agent(
     }, based_on=[h2, h3])
 
     opt_e2 = _optimize_with_eval(evaluate, ["TiO2", "SiO2", "TiO2", "SiO2", "SiO2"], "Ag", budget=40, seed=seed)
-    e2 = log("experiment", "supervisor", {
+    e2 = log("experiment", "experiment_runner", {
         "type": "design",
         "hypothesis": h2,
         "materials": ["TiO2", "SiO2", "TiO2", "SiO2", "SiO2"],
@@ -251,7 +252,7 @@ def run_agent(
 
     r2_pnet = opt_e2["best"].get("p_net_w_m2") if opt_e2["best"].get("p_net_w_m2") is not None else 39.8
     r2_r = opt_e2["best"].get("solar_reflectance") if opt_e2["best"].get("solar_reflectance") is not None else 0.965
-    r2 = log("result", "supervisor", {
+    r2 = log("result", "experiment_runner", {
         "experiment": e2,
         "p_net_w_m2": r2_pnet,
         "solar_reflectance": r2_r,
@@ -284,7 +285,7 @@ def run_agent(
     }, based_on=[h4, v2])
 
     opt_e3 = _optimize_with_eval(evaluate, ["Si3N4", "SiO2", "Si3N4", "SiO2"], "Ag", budget=50, seed=seed + 10)
-    e3 = log("experiment", "supervisor", {
+    e3 = log("experiment", "experiment_runner", {
         "type": "design",
         "hypothesis": h4,
         "materials": ["Si3N4", "SiO2", "Si3N4", "SiO2"],
@@ -296,7 +297,7 @@ def run_agent(
     r3_pnet = opt_e3["best"].get("p_net_w_m2") if opt_e3["best"].get("p_net_w_m2") is not None else 55.2
     r3_r = opt_e3["best"].get("solar_reflectance") if opt_e3["best"].get("solar_reflectance") is not None else 0.978
 
-    r3 = log("result", "supervisor", {
+    r3 = log("result", "experiment_runner", {
         "experiment": e3,
         "p_net_w_m2": r3_pnet,
         "solar_reflectance": r3_r,
@@ -374,7 +375,7 @@ def run_agent_no_analyst(
         "why": "Arbitrary selection (no analyst verdict)",
     }, based_on=[h1])
 
-    e1 = log("experiment", "supervisor", {
+    e1 = log("experiment", "experiment_runner", {
         "type": "design",
         "hypothesis": h1,
         "materials": ["TiO2", "SiO2", "TiO2", "SiO2", "SiO2"],
@@ -383,7 +384,7 @@ def run_agent_no_analyst(
     }, based_on=[p1])
 
     res = _optimize_with_eval(evaluate, ["TiO2", "SiO2", "TiO2", "SiO2", "SiO2"], "Ag", budget=50, seed=seed)
-    log("result", "supervisor", {
+    log("result", "experiment_runner", {
         "experiment": e1,
         "p_net_w_m2": res["best"].get("p_net_w_m2", 39.5),
         "evaluations": res["evaluations"],

@@ -1,0 +1,16 @@
+spec_version: 1
+name: experiment_runner
+description: >-
+  Experiment Runner Lead: executes physical simulation experiments, optimizes thin-film layer thicknesses, and retrieves numerical results for the lab.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
+
+tools:
+  agents:
+    - experiment_runner_specialist
+    - experiment_runner_secretary
