@@ -1,22 +1,26 @@
 {
-  "fake": true,
-  "source": "analysis/fixtures/fake_benchmark.json",
-  "source_sha256": "fcc492fbbc37de19237e0ea1f736527220b3727350a0a17dad4de45285f94a7f",
-  "command": "python -m analysis.speedup analysis/fixtures/fake_benchmark.json",
-  "target_w_m2": 55.0,
-  "budget": 2000,
+  "fake": false,
+  "source": "results/benchmark.json",
+  "source_sha256": "cd5989e042dd5003b2a1dddce1f6d8394d63400adc7aaf56fe0db451d338c652",
+  "command": "python -m analysis.speedup results/benchmark.json",
+  "target_w_m2": 50.0,
+  "budget": 100,
   "focus": "agent_lab",
   "method_order": [
     "agent_lab",
     "random",
+    "alternating",
     "bayes_opt",
-    "agent_lab_no_feedback"
+    "genetic_algorithm",
+    "agent_lab_ablation"
   ],
   "colors": {
     "agent_lab": "#2a78d6",
     "random": "#1baf7a",
+    "alternating": "#eda100",
     "bayes_opt": "#eb6834",
-    "agent_lab_no_feedback": "#eda100"
+    "genetic_algorithm": "#e87ba4",
+    "agent_lab_ablation": "#008300"
   },
   "methods": {
     "agent_lab": {
@@ -28,27 +32,27 @@
         0.5958499704752279,
         0.982123787103926
       ],
-      "median_evals": 359.0,
+      "median_evals": 34.0,
       "median_censored": false,
-      "best_w_m2_median": 56.209999999999994,
-      "best_w_m2_max": 57.59
+      "best_w_m2_median": 55.252700000000004,
+      "best_w_m2_max": 57.906
     },
     "random": {
       "label": "Random search",
       "runs": 10,
-      "reached": 4,
-      "success_rate": 0.4,
+      "reached": 3,
+      "success_rate": 0.3,
       "success_rate_ci95": [
-        0.1681803285264069,
-        0.6873262320788047
+        0.10779126655639398,
+        0.6032218546540291
       ],
       "median_evals": null,
       "median_censored": true,
-      "best_w_m2_median": 54.46,
-      "best_w_m2_max": 57.94
+      "best_w_m2_median": 47.035849999999996,
+      "best_w_m2_max": 53.9845
     },
-    "bayes_opt": {
-      "label": "Bayesian optimization",
+    "alternating": {
+      "label": "Alternating",
       "runs": 10,
       "reached": 7,
       "success_rate": 0.7,
@@ -56,34 +60,62 @@
         0.3967781453459709,
         0.892208733443606
       ],
-      "median_evals": 878.0,
+      "median_evals": 27.0,
       "median_censored": false,
-      "best_w_m2_median": 55.67,
-      "best_w_m2_max": 58.05
+      "best_w_m2_median": 50.45855,
+      "best_w_m2_max": 56.9969
     },
-    "agent_lab_no_feedback": {
+    "bayes_opt": {
+      "label": "Bayesian optimization",
+      "runs": 10,
+      "reached": 10,
+      "success_rate": 1.0,
+      "success_rate_ci95": [
+        0.7224671969739421,
+        0.9999999999999999
+      ],
+      "median_evals": 45.0,
+      "median_censored": false,
+      "best_w_m2_median": 51.48035,
+      "best_w_m2_max": 54.9972
+    },
+    "genetic_algorithm": {
+      "label": "Genetic algorithm",
+      "runs": 10,
+      "reached": 8,
+      "success_rate": 0.8,
+      "success_rate_ci95": [
+        0.4901624691221323,
+        0.9433178490622331
+      ],
+      "median_evals": 60.0,
+      "median_censored": false,
+      "best_w_m2_median": 50.76825,
+      "best_w_m2_max": 54.1753
+    },
+    "agent_lab_ablation": {
       "label": "Agent lab, no analyst feedback (ablation)",
       "runs": 10,
-      "reached": 6,
-      "success_rate": 0.6,
+      "reached": 0,
+      "success_rate": 0.0,
       "success_rate_ci95": [
-        0.3126737679211953,
-        0.831819671473593
+        0.0,
+        0.2775328030260577
       ],
-      "median_evals": 943.0,
-      "median_censored": false,
-      "best_w_m2_median": 55.385,
-      "best_w_m2_max": 56.64
+      "median_evals": null,
+      "median_censored": true,
+      "best_w_m2_median": 31.07405,
+      "best_w_m2_max": 34.7554
     }
   },
   "speedups": [
     {
       "focus": "agent_lab",
       "baseline": "random",
-      "point": 5.571030640668524,
+      "point": 2.9411764705882355,
       "ci95": [
-        3.9610027855153205,
-        7.042253521126761
+        2.6176470588235294,
+        3.8461538461538463
       ],
       "baseline_censored": true,
       "focus_censored": false,
@@ -92,16 +124,34 @@
         "seed": 12345,
         "method": "percentile, independent resampling per method"
       },
-      "claim": "The agent lab needed about 5.6× fewer evaluations than random search (95% CI 4.0×–7.0×); we claim at least 4.0×. Random search reached the target in fewer than half of its runs, so its median is capped at the budget of 2000 and the true speed-up is larger.",
+      "claim": "The agent lab needed about 2.9× fewer evaluations than random search (95% CI 2.6×–3.8×); we claim at least 2.6×. Random search reached the target in fewer than half of its runs, so its median is capped at the budget of 100 and the true speed-up is larger.",
       "supported": true
+    },
+    {
+      "focus": "agent_lab",
+      "baseline": "alternating",
+      "point": 0.7941176470588235,
+      "ci95": [
+        0.35714285714285715,
+        3.076923076923077
+      ],
+      "baseline_censored": false,
+      "focus_censored": false,
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 12345,
+        "method": "percentile, independent resampling per method"
+      },
+      "claim": "No speed-up: the agent lab needed 1.3× as many evaluations as Alternating (median).",
+      "supported": false
     },
     {
       "focus": "agent_lab",
       "baseline": "bayes_opt",
-      "point": 2.445682451253482,
+      "point": 1.3235294117647058,
       "ci95": [
-        1.4389027431421446,
-        6.03169014084507
+        0.75,
+        1.8076923076923077
       ],
       "baseline_censored": false,
       "focus_censored": false,
@@ -110,16 +160,16 @@
         "seed": 12345,
         "method": "percentile, independent resampling per method"
       },
-      "claim": "The agent lab needed about 2.4× fewer evaluations than Bayesian optimization (95% CI 1.4×–6.0×); we claim at least 1.4×.",
-      "supported": true
+      "claim": "The agent lab needed 1.3× fewer evaluations than Bayesian optimization in the point estimate, but the 95% CI (0.8×–1.8×) includes no speed-up, so no speed-up is claimed.",
+      "supported": false
     },
     {
       "focus": "agent_lab",
-      "baseline": "agent_lab_no_feedback",
-      "point": 2.6267409470752088,
+      "baseline": "genetic_algorithm",
+      "point": 1.7647058823529411,
       "ci95": [
-        1.7632311977715878,
-        7.042253521126761
+        0.9705882352941176,
+        2.9615384615384617
       ],
       "baseline_censored": false,
       "focus_censored": false,
@@ -128,7 +178,25 @@
         "seed": 12345,
         "method": "percentile, independent resampling per method"
       },
-      "claim": "The agent lab needed about 2.6× fewer evaluations than the ablation without analyst feedback (95% CI 1.8×–7.0×); we claim at least 1.8×.",
+      "claim": "The agent lab needed 1.8× fewer evaluations than Genetic algorithm in the point estimate, but the 95% CI (1.0×–3.0×) includes no speed-up, so no speed-up is claimed.",
+      "supported": false
+    },
+    {
+      "focus": "agent_lab",
+      "baseline": "agent_lab_ablation",
+      "point": 2.9411764705882355,
+      "ci95": [
+        2.9411764705882355,
+        3.8461538461538463
+      ],
+      "baseline_censored": true,
+      "focus_censored": false,
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 12345,
+        "method": "percentile, independent resampling per method"
+      },
+      "claim": "The agent lab needed about 2.9× fewer evaluations than the ablation without analyst feedback (95% CI 2.9×–3.8×); we claim at least 2.9×. The ablation without analyst feedback reached the target in fewer than half of its runs, so its median is capped at the budget of 100 and the true speed-up is larger.",
       "supported": true
     }
   ],
@@ -139,43 +207,43 @@
         0.0
       ],
       [
-        220,
+        21,
         0.1
       ],
       [
-        281,
+        26,
         0.2
       ],
       [
-        284,
+        26,
         0.3
       ],
       [
-        338,
+        28,
         0.4
       ],
       [
-        359,
+        34,
         0.5
       ],
       [
-        376,
+        34,
         0.6
       ],
       [
-        401,
+        34,
         0.7
       ],
       [
-        419,
+        34,
         0.8
       ],
       [
-        748,
+        37,
         0.9
       ],
       [
-        2000,
+        100,
         0.9
       ]
     ],
@@ -185,24 +253,58 @@
         0.0
       ],
       [
-        975,
+        66,
         0.1
       ],
       [
-        1422,
+        83,
         0.2
       ],
       [
-        1685,
+        89,
         0.3
       ],
       [
-        1974,
+        100,
+        0.3
+      ]
+    ],
+    "alternating": [
+      [
+        0,
+        0.0
+      ],
+      [
+        8,
+        0.1
+      ],
+      [
+        10,
+        0.2
+      ],
+      [
+        20,
+        0.3
+      ],
+      [
+        22,
         0.4
       ],
       [
-        2000,
-        0.4
+        27,
+        0.5
+      ],
+      [
+        30,
+        0.6
+      ],
+      [
+        80,
+        0.7
+      ],
+      [
+        100,
+        0.7
       ]
     ],
     "bayes_opt": [
@@ -211,70 +313,100 @@
         0.0
       ],
       [
-        431,
+        15,
         0.1
       ],
       [
-        559,
+        21,
         0.2
       ],
       [
-        577,
+        32,
         0.3
       ],
       [
-        840,
+        34,
         0.4
       ],
       [
-        878,
+        45,
         0.5
       ],
       [
-        1638,
+        47,
         0.6
       ],
       [
-        1713,
+        47,
         0.7
       ],
       [
-        2000,
-        0.7
+        49,
+        0.8
+      ],
+      [
+        55,
+        0.9
+      ],
+      [
+        66,
+        1.0
+      ],
+      [
+        100,
+        1.0
       ]
     ],
-    "agent_lab_no_feedback": [
+    "genetic_algorithm": [
       [
         0,
         0.0
       ],
       [
-        611,
+        28,
         0.1
       ],
       [
-        633,
+        32,
         0.2
       ],
       [
-        731,
+        33,
         0.3
       ],
       [
-        758,
+        54,
         0.4
       ],
       [
-        943,
+        60,
         0.5
       ],
       [
-        1028,
+        67,
         0.6
       ],
       [
-        2000,
-        0.6
+        77,
+        0.7
+      ],
+      [
+        99,
+        0.8
+      ],
+      [
+        100,
+        0.8
+      ]
+    ],
+    "agent_lab_ablation": [
+      [
+        0,
+        0.0
+      ],
+      [
+        100,
+        0.0
       ]
     ]
   },
