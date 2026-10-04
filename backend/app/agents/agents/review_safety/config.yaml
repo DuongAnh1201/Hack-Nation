@@ -1,0 +1,16 @@
+spec_version: 1
+name: review_safety
+description: >-
+  Needs human approval? Are claims backed by records?
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
+
+tools:
+  agents:
+    - review_evidence_auditor
+    - review_safety_approval

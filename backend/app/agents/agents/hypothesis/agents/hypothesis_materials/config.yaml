@@ -1,0 +1,11 @@
+spec_version: 1
+name: hypothesis_materials
+description: >-
+  Judges candidate materials from their n, k data, cost and availability.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md

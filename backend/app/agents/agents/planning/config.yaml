@@ -1,0 +1,16 @@
+spec_version: 1
+name: planning
+description: >-
+  Which of 2+ candidate tests to run, within budget.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
+
+tools:
+  agents:
+    - planning_exploration
+    - planning_budget

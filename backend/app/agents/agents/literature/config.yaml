@@ -1,0 +1,18 @@
+spec_version: 1
+name: literature
+description: >-
+  Decides which published evidence the lab accepts for the research question.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
+
+tools:
+  agents:
+    - literature_web_search
+    - literature_filter
+    - literature_processing
+    - literature_secretary

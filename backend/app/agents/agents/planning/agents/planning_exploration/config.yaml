@@ -1,0 +1,11 @@
+spec_version: 1
+name: planning_exploration
+description: >-
+  Proposes candidate tests and their expected gain.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
