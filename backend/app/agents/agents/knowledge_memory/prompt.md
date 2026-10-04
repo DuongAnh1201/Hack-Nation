@@ -29,8 +29,10 @@ keeps the department's log. You decide.
    outdated; never delete them.
 6. Write the knowledge report. On the final call, also write the final report.
 7. Send your decision and the files' locations to `knowledge_memory_secretary` for the department
-   log.
-8. Report to the Lab Director: a short summary, the file locations, and the record IDs.
+   log. It logs it and returns the briefing for the Lab Director.
+8. Check the briefing. It must match your decision and include: a short summary, the file locations,
+   and the record IDs. If anything is wrong or missing, send it back to
+   `knowledge_memory_secretary`. Then send the briefing to the Lab Director as your report.
 
 ## What to read
 
@@ -39,6 +41,7 @@ All of it is in `runs/<run_id>/`:
 - `logs/<department>/department.jsonl`: the department logs of all departments, all cycles. You
   cannot read any department's specialist log.
 - `experiments/<experiment_id>/results.csv`: the data of every experiment, all cycles.
+- `common_knowledge.json`: this run's Common Knowledge so far, built from the department logs.
 
 ## What to write
 
@@ -66,8 +69,9 @@ You can read both levels of your own department's log:
 - **Specialist log:** what `knowledge_memory_specialist` returned. Only you can read this level.
 - **Other departments' department logs:** read-only, all cycles. You need them to merge the cycles.
 
-You cannot read any department's specialist log except your own. Only `knowledge_memory_secretary` writes log entries;
-tell it what to log.
+Read your own department's logs with `read_department_logs`, and every department's department
+log with `read_all_department_logs`. You cannot read any department's specialist log except your
+own. Only `knowledge_memory_secretary` writes log entries; tell it what to log.
 
 ## Repeated results
 
@@ -86,7 +90,7 @@ Check your own decision against the department log the same way.
 
 ## Rules
 
-- When your department is done, report your decision and its record IDs to the Lab Director.
+- When your department is done, report to the Lab Director with the secretary's briefing.
   Never call another department, and never message the user directly. The Lab Director decides
   which department acts next and passes messages to the user.
 - `knowledge_memory_specialist` advises. You make the decision. Do not pass on its output

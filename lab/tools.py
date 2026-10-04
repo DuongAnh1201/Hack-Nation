@@ -463,40 +463,112 @@ def write_record(kind: str, agent: str, content: dict, based_on: list = None, ru
 # Common Knowledge Hub Integration
 # ---------------------------------------------------------------------------
 
-def log_to_common_knowledge(department: str, payload: dict) -> dict:
-    """Record an accepted scientific finding, hypothesis, or verdict into Common Knowledge.
+DEPARTMENTS = (
+    "literature", "hypothesis", "planning", "experiment_runner",
+    "analysis", "review_safety", "knowledge_memory",
+)
+LOG_LEVELS = ("department", "specialist")
 
-    This updates runs/common_knowledge.json and persists cross-cycle shared memory.
+
+def _log_path(run_id: str, department: str, level: str) -> Path:
+    if department not in DEPARTMENTS:
+        raise ValueError(f"Unknown department {department!r}; expected one of {DEPARTMENTS}")
+    if level not in LOG_LEVELS:
+        raise ValueError(f"Unknown log level {level!r}; expected one of {LOG_LEVELS}")
+    clean_id = run_id.strip() or "default"
+    return Path("runs") / clean_id / "logs" / department / f"{level}.jsonl"
+
+
+def _read_log(path: Path) -> list:
+    if not path.is_file():
+        return []
+    with open(path, "r", encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def log_to_common_knowledge(
+    department: str,
+    payload: dict,
+    level: str = "department",
+    run_id: str = "default",
+    repeat_of: str = "",
+) -> dict:
+    """Append an entry to a department's log in runs/<run_id>/logs/<department>/<level>.jsonl.
+
+    Levels (see backend/app/agents/local_readme.md, "Log permissions"):
+    - "department": the Lead's decisions and reports. Readable by the Lead, the Lab Director
+      and the Knowledge Lead. Also recorded in the run's Common Knowledge
+      (runs/<run_id>/common_knowledge.json).
+    - "specialist": the specialist's results. Readable only by the department's Lead.
 
     Args:
-        department: Creating department ('literature', 'hypothesis', 'planning', 'analysis', 'review_safety').
-        payload: Structured dictionary of the finding, hypothesis, or verdict.
+        department: The secretary's own department, e.g. "literature".
+        payload: What the Lead asked to log.
+        level: "department" or "specialist".
+        run_id: Identifier of the run directory under runs/.
+        repeat_of: ID of an earlier entry this one repeats, or "" if it is new.
 
     Returns:
-        Confirmation dictionary with updated cycle count and status.
+        The new entry's ID, level and log path.
     """
-    from lab.sandbox import CommonKnowledgeHub
+    path = _log_path(run_id, department, level)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    entry_id = f"{department}.{level}.{len(_read_log(path)) + 1}"
+    entry = {
+        "id": entry_id,
+        "t": round(time.time(), 1),
+        "department": department,
+        "level": level,
+        "repeat_of": repeat_of or None,
+        "payload": payload,
+    }
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
 
-    hub = CommonKnowledgeHub()
-    hub.record_finding(department=department, payload=payload)
-    hub.save()
+    cycle = None
+    if level == "department":
+        from lab.sandbox import CommonKnowledgeHub
+
+        hub = CommonKnowledgeHub(run_id=run_id)
+        hub.record_finding(department=department, payload=payload)
+        hub.save()
+        cycle = hub.state.cycle
+
     return {
         "status": "success",
+        "entry_id": entry_id,
         "department": department,
-        "cycle": hub.state.cycle,
-        "entry_logged": payload.get("id") or payload.get("title") or payload.get("claim") or "recorded",
+        "level": level,
+        "repeat_of": repeat_of or None,
+        "log_path": str(path),
+        "cycle": cycle,
     }
 
 
-def read_common_knowledge() -> dict:
-    """Read the current consolidated state from the central Common Knowledge Hub.
+def read_department_logs(department: str, level: str = "department", run_id: str = "default") -> list:
+    """Read one department's log at one level. Wrapped per Lead with its own department fixed."""
+    return _read_log(_log_path(run_id, department, level))
+
+
+def read_all_department_logs(run_id: str = "default") -> dict:
+    """Read every department's department-level log. Specialist logs are never included.
+
+    For the Lab Director and the Knowledge Lead.
+    """
+    return {d: _read_log(_log_path(run_id, d, "department")) for d in DEPARTMENTS}
+
+
+def read_common_knowledge(run_id: str = "default") -> dict:
+    """Read a run's Common Knowledge from runs/<run_id>/common_knowledge.json.
+
+    Each run (one whole research project, across all its cycles) has its own Common Knowledge.
 
     Returns:
         Dictionary containing current cycle, confirmed facts, hypotheses, best P_net, and verdicts.
     """
     from lab.sandbox import CommonKnowledgeHub
 
-    hub = CommonKnowledgeHub()
+    hub = CommonKnowledgeHub(run_id=run_id)
     return hub.state.to_dict()
 
 

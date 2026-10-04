@@ -110,5 +110,5 @@ The cycle transitions operate as follows:
 In Docker Sandboxes (`sbx --cloud`):
 - Persistent volume: `common-knowledge-vol` mounted to `/home/agent/workspace/runs`.
 - Ledger file: `LAB_EVAL_LEDGER` written at `/home/agent/workspace/runs/eval_ledger.jsonl`.
-- Common Knowledge file: `/home/agent/workspace/runs/common_knowledge.json`.
+- Common Knowledge file, one per run (a whole research project): `/home/agent/workspace/runs/<run_id>/common_knowledge.json`.
 - Research record: `/home/agent/workspace/runs/record.jsonl`.

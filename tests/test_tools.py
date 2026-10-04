@@ -341,3 +341,58 @@ def test_run_experiment_reports_failures_and_missing_script(tmp_path, monkeypatc
 
     with pytest.raises(FileNotFoundError):
         tools.run_experiment("missing", run_id="r1")
+
+
+def test_department_logs_have_two_levels_and_repeat_links(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    s1 = tools.log_to_common_knowledge("literature", {"found": 3}, level="specialist", run_id="r1")
+    s2 = tools.log_to_common_knowledge("literature", {"found": 3}, level="specialist", run_id="r1",
+                                       repeat_of=s1["entry_id"])
+    d1 = tools.log_to_common_knowledge("literature", {"decision": "accept L1"}, run_id="r1")
+
+    assert s1["entry_id"] == "literature.specialist.1"
+    assert s2["repeat_of"] == "literature.specialist.1"
+    assert d1["level"] == "department" and d1["cycle"] == 1
+    assert (tmp_path / "runs" / "r1" / "logs" / "literature" / "specialist.jsonl").is_file()
+
+    spec = tools.read_department_logs("literature", level="specialist", run_id="r1")
+    assert [e["id"] for e in spec] == ["literature.specialist.1", "literature.specialist.2"]
+    assert spec[1]["repeat_of"] == "literature.specialist.1"
+
+
+def test_specialist_logs_stay_out_of_hub_and_director_view(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    tools.log_to_common_knowledge("analysis", {"p_net_w_m2": 99.0}, level="specialist", run_id="r1")
+    tools.log_to_common_knowledge("analysis", {"verdict": "refuted"}, run_id="r1")
+
+    everything = tools.read_all_department_logs(run_id="r1")
+    assert set(everything) == set(tools.DEPARTMENTS)
+    assert [e["payload"] for e in everything["analysis"]] == [{"verdict": "refuted"}]
+    assert all(e["level"] == "department" for entries in everything.values() for e in entries)
+    assert tools.read_common_knowledge("r1")["best_p_net_w_m2"] is None
+
+
+def test_log_tools_reject_unknown_department_or_level(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(ValueError):
+        tools.log_to_common_knowledge("marketing", {}, run_id="r1")
+    with pytest.raises(ValueError):
+        tools.log_to_common_knowledge("literature", {}, level="private", run_id="r1")
+    assert tools.read_department_logs("literature", run_id="empty") == []
+
+
+def test_common_knowledge_is_per_run_and_packaged(tmp_path, monkeypatch):
+    import zipfile
+
+    monkeypatch.chdir(tmp_path)
+    tools.log_to_common_knowledge("hypothesis", {"id": "H1", "claim": "run A claim"}, run_id="run_a")
+    tools.log_to_common_knowledge("hypothesis", {"id": "H1", "claim": "run B claim"}, run_id="run_b")
+
+    assert (tmp_path / "runs" / "run_a" / "common_knowledge.json").is_file()
+    assert not (tmp_path / "runs" / "common_knowledge.json").exists()
+    assert tools.read_common_knowledge("run_a")["hypotheses"]["H1"]["claim"] == "run A claim"
+    assert tools.read_common_knowledge("run_b")["hypotheses"]["H1"]["claim"] == "run B claim"
+    assert tools.read_common_knowledge("run_c")["hypotheses"] == {}
+
+    with zipfile.ZipFile(tools.package_run("run_a")) as z:
+        assert "common_knowledge.json" in z.namelist()

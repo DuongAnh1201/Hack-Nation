@@ -40,6 +40,7 @@ at the end the user downloads that folder as a zip.
 ```
 runs/<run_id>/
   record.jsonl                      the research record (shared contract)
+  common_knowledge.json             this run's Common Knowledge, across all its cycles
   logs/<department>/department.jsonl   Lead decisions and reports
   logs/<department>/specialist.jsonl   specialist results
   experiments/<experiment_id>/      run.py, results.csv, output.log
@@ -65,17 +66,45 @@ tool exists.
 
 - **The specialist** investigates and advises. It returns its result to the Lead and writes nothing
   to the record or the logs.
-- **The Lead** makes the department's decision, writes it to the record, and reports to the
-  Director.
-- **The secretary** writes the department's log entries. It logs what the Lead sends and never
-  changes it.
+- **The Lead** makes the department's decision, writes it to the record (only Leads have
+  `write_record`), checks the secretary's briefing, and sends it to the Director.
+- **The secretary** writes the department's log entries and the briefing for the Director. It works
+  only from what the Lead sends, never changes it, never writes to the record, and decides nothing.
 - **The Lab Director** decides which department acts next and when the research stops. It does not
   make the departments' scientific decisions.
-- **Every Lead reports back to the Director** when its department finishes: the decision and its
-  record IDs. Leads never call another department, so every handoff goes through the Director.
+- **Every Lead reports back to the Director** with the briefing when its department finishes.
+  Leads never call another department, so every handoff goes through the Director.
 - **Only the Director talks to the user.** When a Lead needs a human (e.g. a plan the agents cannot
   run), it puts a message for the user in its report, and the Director sends it and passes the
   answer back.
+
+## Secretary: log and brief
+
+This follows the "briefing officer" idea agreed in #18, with one change: the secretary no longer
+writes to the record. Only the Lead does.
+
+1. The specialist returns its result to the Lead. The Lead has the secretary log it at the
+   `specialist` level.
+2. The Lead decides and writes the decision to the record.
+3. The Lead sends the decision to the secretary, which logs it at the `department` level and
+   writes the briefing.
+4. The Lead checks that the briefing matches its decision, sends it back to the secretary if
+   anything is wrong, then sends it to the Director as its report.
+
+Every briefing has the same headings, so the Director reads all departments the same way:
+
+| Heading | Content |
+|---|---|
+| Decision | What the Lead decided, in one or two sentences |
+| Record IDs | Entries the decision wrote and is based on |
+| Reason | Why, in the Lead's words |
+| Suggested next step | The Lead's recommendation; the Director decides |
+| Repeat | `no`, or `yes` with the earlier log entry ID |
+| Files | Locations of experiment folders or reports, or `none` |
+| Needs the user | The message for the user, or `no` |
+| Log entry | The ID of the department-log entry |
+
+The secretary writes `not given` for anything the Lead did not send; it never fills gaps itself.
 
 ## Log permissions
 
@@ -84,18 +113,27 @@ Each department has two log levels, stored as files in the run folder:
 - **Department log:** the Lead's decisions and reports (`logs/<department>/department.jsonl`).
 - **Specialist log:** the specialist's results (`logs/<department>/specialist.jsonl`).
 
-| Agent | Department log | Specialist log |
-|---|---|---|
-| Lab Director | Read, all departments | No access |
-| Lead | Read, own department | Read, own department |
-| Knowledge Lead | Read, all departments (to merge cycles) | Read, own department |
-| Secretary | Write, own department | Write, own department |
-| Specialist | No access | No access |
+| Agent | Department log | Specialist log | Tool |
+|---|---|---|---|
+| Lab Director | Read, all departments | No access | `read_all_department_logs` |
+| Lead | Read, own department | Read, own department | `read_department_logs` |
+| Knowledge Lead | Read, all departments (to merge cycles) | Read, own department | both of the above |
+| Secretary | Write, own department | Write, own department | `log_to_common_knowledge` |
+| Specialist | No access | No access | none |
 
 No agent can read another department's specialist log. The Director gets detail by asking a Lead.
-These limits must be enforced by the log tools, not just by the prompts: each agent gets only the
-log tools its row allows, and each tool opens only the files its row allows. The downloaded zip
-contains every log, because it is for the user, not for the agents.
+The tools enforce these limits, not just the prompts:
+- each agent gets only the tools in its row (Omnigent loads only the tools in an agent's own
+  folder);
+- the secretary's and the Lead's wrappers have their department fixed, so they cannot write or
+  read another department's log;
+- `read_all_department_logs` never returns specialist logs.
+
+The functions are in `lab/tools.py`. `log_to_common_knowledge` also records department-level
+entries in the run's Common Knowledge (`runs/<run_id>/common_knowledge.json`). A run is one whole
+research project across all its cycles, so each run has its own Common Knowledge, and it is in
+that run's zip. The downloaded zip contains every log, because it is for the user, not for the
+agents.
 
 ## Repeated results
 
@@ -147,9 +185,11 @@ calls it again only if something changed elsewhere in the lab; otherwise it move
 **Experiment Runner:** decides whether a run went as planned and its data is accepted.
 
 1. `experiment_runner_specialist` writes the code (`run.py`, listing its inputs, tools, packages,
-   outputs and the command to reproduce it), runs it, and saves the code, `results.csv` (one row
-   per simulation, failed designs kept) and `output.log` together in one experiment folder. Code is
-   never changed after it produced data; a fix gets a new experiment folder.
+   outputs and the command to reproduce it), following `runs/example/experiments/E0/run.py`. It
+   runs it with the `run_experiment` tool, which saves the code, `results.csv` (one row per
+   simulation, written with `lab.csv_helper.write_results_csv`, failed designs kept) and
+   `output.log` together in one experiment folder. Code is never changed after it produced data;
+   a fix gets a new experiment folder.
 2. The Lead checks that the run followed the plan, finished, and produced a complete CSV, then
    writes `experiment` and `result` records. It runs only plans marked `runnable_by: agents`.
 3. `experiment_runner_secretary` logs where the files are (experiment ID, experiment folder, row
@@ -202,9 +242,8 @@ its folder.
 Open questions:
 - The Experiment Runner specialist runs code it writes itself. Give it a sandbox in its
   `config.yaml` (`os_env.sandbox`: write only to `runs/`, no network) before enabling it.
-- The log tools and the packaging tool are not built yet. Until the log tools exist, the
-  secretaries return their log entries to the Lead as text. The prompts still say "lab log
-  database"; update them when the log tools exist.
+- Agents pass `run_id` to the record and log tools themselves; it defaults to `"default"`. The
+  Director should state the run ID in every task.
 - The shared record has no field for the cycle number or kind for common knowledge. For now the
   cycle number goes in each entry's `content`, and the knowledge report is a file.
 - Reruns have no hard limit. A budget policy could cap them.
@@ -299,12 +338,89 @@ instead of the prompt text, its `prompt.md` is missing or misnamed.
 
 The simulator (`simulate_stack`, `optimize_thicknesses`), the record tools (`read_record`,
 `write_record`), paper search (`search_papers`), material properties (`list_materials`, `material_properties`),
-and knowledge logging tools (`log_to_common_knowledge`, `read_common_knowledge`) are deterministic tools
-implemented in [lab/tools.py](../../../../lab/tools.py).
+and the log tools (`log_to_common_knowledge`, `read_department_logs`, `read_all_department_logs`)
+are deterministic tools implemented in [lab/tools.py](../../../lab/tools.py).
 
 Omnigent finds local tools in `tools/python/*.py` inside each agent's folder, which is also how tool
 permissions are enforced:
-- **Specialists** carry domain execution tools (e.g. `literature_specialist` uses `search_papers`, `hypothesis_specialist` uses `list_materials`/`material_properties`, `analysis_specialist` uses `simulate_stack`/`optimize_thicknesses`).
-- **Secretaries** carry logging tools (`log_to_common_knowledge`, `write_record`) and act as internal briefing officers for Department Leads.
-- **Department Leads & Director** coordinate delegation and review via `read_record`.
+- **Specialists** carry domain tools: `literature_specialist` uses `search_papers`;
+  `hypothesis_specialist` uses `list_materials` and `material_properties`;
+  `experiment_runner_specialist` uses `simulate_stack`, `optimize_thicknesses` and
+  `run_experiment`; `analysis_specialist` uses `compare_to_benchmark`.
+- **Secretaries** carry only `log_to_common_knowledge`, fixed to their own department.
+- **Department Leads** carry `read_record`, `write_record` and `read_department_logs`.
+- **The Director** carries `read_record` and `read_all_department_logs`; the Knowledge Lead also
+  has `read_all_department_logs`.
+
+### What the agent-facing tools guarantee
+
+Tools return data and never decide. These rules are covered by `tests/test_tools.py`:
+
+- **`search_papers`** (`search_academic_papers`): only Springer, Nature, IEEE and arXiv. Every
+  result has `origin`: `openalex` (live) or `offline_fallback` (built-in list, used when OpenAlex
+  fails or returns too little). Fallback entries pass the same publisher filter, and each one's DOI
+  was checked against OpenAlex. Results are not ranked; the Literature department decides.
+- **`run_experiment(experiment_id, run_id, timeout_s)`**: runs the agent-written
+  `runs/<run_id>/experiments/<experiment_id>/run.py` inside its folder, saves everything printed
+  to `output.log`, and returns the exit code, a timeout flag, the paths and the row count of
+  `results.csv`. It never writes or changes `run.py`. (`execute_experiment_script`, which built
+  the script from a template, stays in `lab/tools.py` but no agent has it.)
+- **`compare_to_benchmark(p_net_w_m2, solar_reflectance, window_emissivity)`**: compares cooling
+  power with the Stanford control in our simulator (11.83 W/m²), and the two optional metrics with
+  the control's values in `results/control.json`. Reports numbers only; Analysis decides the
+  verdict.
+- **`log_to_common_knowledge(payload, level, run_id, repeat_of)`**: appends to
+  `runs/<run_id>/logs/<department>/<level>.jsonl`; `department` entries also go into the run's
+  `common_knowledge.json`. Entry IDs look like `literature.specialist.3`.
+- **`read_department_logs` / `read_all_department_logs`**: see "Log permissions".
+- **`package_run(run_id)`**: zips `runs/<run_id>/` into `runs/<run_id>.zip`, including the record,
+  logs, experiments, knowledge reports and `common_knowledge.json`.
+
+## Setup
+
+From the repo root, once per machine:
+
+```bash
+uv venv .venv --python 3.12
+source .venv/bin/activate
+uv pip install numpy scipy optuna pyyaml pytest
+uv pip install -e .
+```
+
+`uv pip install -e .` makes `lab`, `bench`, `analysis` and `physics_lab` importable from any
+folder, which the agents' `run.py` and `merge.py` need. `pyproject.toml` lists those packages
+explicitly; without that, setuptools stops with "Multiple top-level packages discovered".
+
+Omnigent:
+
+```bash
+omni config list                     # check the Claude credential (subscription or API key)
+omni start                           # local server and web UI
+omni run backend/app/agents          # start the Lab Director
+```
+
+Start Omnigent from a terminal where `.venv` is active, so the agents' `python` is the same one.
+Keep secrets (`ANTHROPIC_API_KEY`, `BRIGHTDATA_API_TOKEN`, …) in `.env`, never in issues, configs
+or code. Reference them as `${VAR}` in agent configs.
+
+## Change log
+
+Newest first.
+
+- **One Common Knowledge per run.** `runs/<run_id>/common_knowledge.json` replaces the single
+  `runs/common_knowledge.json` shared by all runs. A run is one whole research project across all
+  its cycles; its Common Knowledge is in its zip. `CommonKnowledgeHub` and `MicroVMManager` take
+  a `run_id`.
+- **Secretaries log in two levels and brief the Director.** Follows #18, except that secretaries
+  no longer write to the record: their `write_record` was removed. New tools
+  `read_department_logs` (Leads) and `read_all_department_logs` (Director, Knowledge Lead); log
+  wrappers are fixed to their own department. See "Secretary: log and brief".
+- **Agent tools aligned with this design (#48, PR #49).** Search fallback cleaned (one fabricated
+  paper and three papers from disallowed publishers removed) and labelled with `origin`;
+  `run_experiment` replaces the template script tool for the Experiment Runner specialist;
+  `compare_to_benchmark` also compares reflectance and emissivity; `pip install -e .` fixed.
+- **Run output as one folder, downloaded as a zip.** The log database was set aside; everything a
+  run produces is a file under `runs/<run_id>/`.
+- **Seven departments, each Lead + specialist + secretary,** with decision ownership, log
+  permissions, repeated-result checks and cycles.
 

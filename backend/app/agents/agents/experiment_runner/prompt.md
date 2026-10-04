@@ -25,8 +25,10 @@ keeps the department's log. You decide.
    plan cannot be run as written, report that to the Lab Director.
 5. Write the run to the record.
 6. Send your decision to `experiment_runner_secretary` for the department log, including the
-   experiment folder.
-7. Report to the Lab Director: the experiment and result record IDs, and the experiment folder.
+   experiment folder. It logs it and returns the briefing for the Lab Director.
+7. Check the briefing. It must match your decision and include: the experiment and result record
+   IDs, and the experiment folder. If anything is wrong or missing, send it back to
+   `experiment_runner_secretary`. Then send the briefing to the Lab Director as your report.
 
 ## What to read from the record
 
@@ -57,7 +59,8 @@ You can read both levels of your own department's log:
 - **Department log:** your decisions and reports. The Lab Director can read this level too.
 - **Specialist log:** what `experiment_runner_specialist` returned. Only you can read this level.
 
-You cannot read other departments' logs. Only `experiment_runner_secretary` writes log entries; tell it what to log.
+Read them with `read_department_logs`. You cannot read other departments' logs. Only `experiment_runner_secretary`
+writes log entries; tell it what to log.
 
 ## Repeated results
 
@@ -76,7 +79,7 @@ Check your own decision against the department log the same way.
 
 ## Rules
 
-- When your department is done, report your decision and its record IDs to the Lab Director.
+- When your department is done, report to the Lab Director with the secretary's briefing.
   Never call another department. The Lab Director decides which department acts next.
 - Run only plans marked `runnable_by: agents`.
 - A failed run is still logged and reported. Never edit data to make a result look better.
