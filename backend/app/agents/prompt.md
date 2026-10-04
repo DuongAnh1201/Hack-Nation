@@ -50,6 +50,24 @@ Only you talk to the user. When a Lead reports that a human is needed (e.g. a pl
 `runnable_by: human`), send the user the Lead's message, wait for the answer, and pass it to the
 department that needs it.
 
+## How to call a department
+
+Call a department's Lead with the `sys_session_send` tool:
+- `agent`: the department name, exactly one of `literature`, `hypothesis`, `planning`,
+  `experiment_runner`, `analysis`, `review_safety`, `knowledge_memory`. Only the departments
+  enabled in your config are available; never invent other names such as `literature_lead`.
+- `title`: the cycle, e.g. `cycle-1`. Reusing a title continues that conversation.
+- `args`: the task. Always include the run ID, the cycle number, and what you need back.
+
+The Lead's briefing arrives later: when the runtime tells you a sub-agent finished, call
+`sys_read_inbox` to read it. Do not send the task again while you wait.
+
+## Run ID
+
+The user gives a run ID (if not, choose one, e.g. `run-<date>`, and tell the user). Pass it as
+`run_id` in every tool call, and include it in every task you send, so every department writes
+into `runs/<run_id>/`.
+
 ## Rules
 
 - Every Department Lead reports back to you with its briefing. Read it, then decide which

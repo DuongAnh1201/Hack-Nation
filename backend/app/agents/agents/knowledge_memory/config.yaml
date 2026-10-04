@@ -14,3 +14,12 @@ tools:
   agents:
     - knowledge_memory_specialist
     - knowledge_memory_secretary
+
+# File and shell tools (sys_os_read/write/edit/shell) in a macOS Seatbelt / Linux bwrap sandbox:
+# Needed because it writes knowledge/cycle_<n>.md and final_report.md. Writes only under runs/, no network. Lab tools run outside this sandbox.
+os_env:
+  type: caller_process
+  cwd: .
+  sandbox:
+    write_paths: ["runs"]
+    allow_network: false

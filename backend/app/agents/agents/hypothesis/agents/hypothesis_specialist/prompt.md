@@ -32,5 +32,6 @@ You cannot read any log. Work only with what the Hypothesis Lead sends you.
 
 ## Rules
 
+- Pass the run ID from your Lead's message as `run_id` in every tool call.
 - Write nothing to the record or the logs. Return your result to the Hypothesis Lead.
 - You advise. The Hypothesis Lead decides.

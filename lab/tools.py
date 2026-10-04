@@ -164,6 +164,120 @@ def search_academic_papers(query: str, limit: int = 5) -> list:
     return results[:limit]
 
 
+# Paper pages read_paper may fetch: the allowed publishers, plus DOI links whose prefix
+# belongs to them (10.1038 Nature, 10.1007 Springer, 10.1186 BMC/Springer Nature,
+# 10.1109 IEEE, 10.48550 arXiv).
+_PAPER_HOSTS = (
+    "arxiv.org", "nature.com", "springer.com", "springeropen.com", "biomedcentral.com",
+    "ieeexplore.ieee.org",
+)
+_PAPER_DOI_PREFIXES = ("10.1038/", "10.1007/", "10.1186/", "10.1109/", "10.48550/")
+_BRIGHTDATA_MCP_URL = "https://mcp.brightdata.com/mcp"
+
+
+def _paper_url_allowed(url: str) -> bool:
+    parsed = urllib.parse.urlparse(url.strip())
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        return False
+    host = parsed.hostname.lower()
+    if host in ("doi.org", "dx.doi.org"):
+        return parsed.path.lstrip("/").lower().startswith(_PAPER_DOI_PREFIXES)
+    return any(host == h or host.endswith("." + h) for h in _PAPER_HOSTS)
+
+
+def _brightdata_token() -> str:
+    """BRIGHTDATA_API_TOKEN from the environment, or from the repo's .env file.
+
+    Omnigent passes only an allowlist of variables to the processes that run tools, so
+    the token usually has to come from .env.
+    """
+    token = os.environ.get("BRIGHTDATA_API_TOKEN", "").strip()
+    if token:
+        return token
+    env_file = Path(__file__).resolve().parents[1] / ".env"
+    if env_file.is_file():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition("=")
+            if key.strip() == "BRIGHTDATA_API_TOKEN":
+                return value.strip().strip("\"'")
+    return ""
+
+
+def _brightdata_call(token: str, payload: dict, session_id: str = "", timeout_s: int = 90) -> tuple:
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+    }
+    if session_id:
+        headers["Mcp-Session-Id"] = session_id
+    req = urllib.request.Request(
+        _BRIGHTDATA_MCP_URL, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=timeout_s) as response:
+        body = response.read().decode("utf-8")
+        new_session = response.headers.get("Mcp-Session-Id", session_id)
+    messages = []
+    for line in body.splitlines():
+        if line.startswith("data:"):
+            messages.append(json.loads(line[5:].strip()))
+    if not messages and body.strip().startswith("{"):
+        messages.append(json.loads(body))
+    return new_session, messages
+
+
+def read_paper(url: str, max_chars: int = 20000) -> dict:
+    """Read a paper's page as text, through Bright Data's scrape_as_markdown.
+
+    Only pages of the allowed publishers are read: arXiv, Nature, Springer and IEEE pages,
+    or a doi.org link with a Nature, Springer, IEEE or arXiv DOI prefix. Use the DOI or URL
+    that search_papers returned. Anything else is refused, so this tool cannot be used to
+    search or browse the wider web.
+
+    Returns the page text (truncated to max_chars) with origin "brightdata", or an "error"
+    when the page could not be read; never a guess.
+    """
+    if not _paper_url_allowed(url):
+        return {
+            "url": url,
+            "error": "URL not allowed: use a DOI or URL from search_papers "
+                     "(arXiv, Nature, Springer, IEEE, or doi.org/10.1038|10.1007|10.1186|10.1109|10.48550).",
+        }
+    token = _brightdata_token()
+    if not token:
+        return {"url": url, "error": "BRIGHTDATA_API_TOKEN is not set in the environment or .env."}
+    try:
+        session, _ = _brightdata_call(token, {
+            "jsonrpc": "2.0", "id": 1, "method": "initialize",
+            "params": {"protocolVersion": "2025-03-26", "capabilities": {},
+                       "clientInfo": {"name": "lab.read_paper", "version": "1"}},
+        })
+        _brightdata_call(token, {"jsonrpc": "2.0", "method": "notifications/initialized"}, session)
+        _, messages = _brightdata_call(token, {
+            "jsonrpc": "2.0", "id": 2, "method": "tools/call",
+            "params": {"name": "scrape_as_markdown", "arguments": {"url": url}},
+        }, session, timeout_s=180)
+    except Exception as exc:  # network or HTTP error: report it, never guess
+        return {"url": url, "error": f"Bright Data request failed: {exc}"}
+
+    for message in messages:
+        if "error" in message:
+            return {"url": url, "error": f"Bright Data error: {message['error']}"}
+        result = message.get("result")
+        if result is not None:
+            text = "\n".join(c.get("text", "") for c in result.get("content", []) if c.get("type") == "text")
+            if result.get("isError"):
+                return {"url": url, "error": f"Bright Data could not read the page: {text[:500]}"}
+            return {
+                "url": url,
+                "origin": "brightdata",
+                "chars": len(text),
+                "truncated": len(text) > max_chars,
+                "markdown": text[:max_chars],
+            }
+    return {"url": url, "error": "Bright Data returned no result."}
+
+
 # ---------------------------------------------------------------------------
 # Material Tools
 # ---------------------------------------------------------------------------

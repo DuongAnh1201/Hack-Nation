@@ -14,3 +14,12 @@ tools:
   agents:
     - experiment_runner_specialist
     - experiment_runner_secretary
+
+# File and shell tools (sys_os_*), read-only: the macOS Seatbelt / Linux bwrap sandbox blocks writes.
+# Needed because it checks run.py, results.csv and output.log after a run. No writes anywhere, no network.
+os_env:
+  type: caller_process
+  cwd: .
+  sandbox:
+    write_paths: []
+    allow_network: false

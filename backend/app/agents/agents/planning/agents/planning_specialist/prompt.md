@@ -33,5 +33,6 @@ You cannot read any log. Work only with what the Planning Lead sends you.
 
 ## Rules
 
+- Pass the run ID from your Lead's message as `run_id` in every tool call.
 - Write nothing to the record or the logs. Return your result to the Planning Lead.
 - You advise. The Planning Lead decides.

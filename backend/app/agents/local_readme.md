@@ -59,8 +59,9 @@ At the end of the process:
    download the zip.
 
 Not decided yet: how Omnigent offers the zip for download (a link in the web session, or a path on
-disk). The prompts do not mention the zip yet; add it to the Director's prompt once the packaging
-tool exists.
+disk). `package_run` exists in `lab/tools.py`, but no agent has it yet and the Director's prompt
+does not mention the zip: until it does, make the zip by hand with
+`python -c "from lab.tools import package_run; print(package_run('<run_id>'))"`.
 
 ## Decision ownership
 
@@ -105,6 +106,28 @@ Every briefing has the same headings, so the Director reads all departments the 
 | Log entry | The ID of the department-log entry |
 
 The secretary writes `not given` for anything the Lead did not send; it never fills gaps itself.
+
+## File access (sandboxed)
+
+Most agents have no file or shell tools: they work only through the lab tools. Omnigent grants
+file and shell tools (`sys_os_read`, `sys_os_write`, `sys_os_edit`, `sys_os_shell`) only to agents
+whose `config.yaml` has an `os_env` block, and runs them in a sandbox (Seatbelt on macOS, bwrap on
+Linux). Six agents have one:
+
+| Agent | Why | Writes | Network |
+|---|---|---|---|
+| `experiment_runner_specialist` | writes `run.py` | `runs/` only | no |
+| `knowledge_memory_specialist` | reads every `results.csv`, writes and runs `merge.py` | `runs/` only | no |
+| `knowledge_memory` (Lead) | writes `cycle_<n>.md`, `final_report.md` | `runs/` only | no |
+| `experiment_runner` (Lead) | checks `run.py`, `results.csv`, `output.log` | none | no |
+| `analysis_specialist` | reads this cycle's `results.csv` | none | no |
+| `review_safety_specialist` | checks numbers against the CSV files | none | no |
+
+Tested: writes inside `runs/` succeed, writes elsewhere fail with "Operation not permitted", the
+repo can be read, and network requests are blocked. Lab tools (`run_experiment`, `read_paper`, …)
+run outside this sandbox. Inside it, `python3` is the system Python without numpy, so `merge.py`
+uses only the standard library and `lab.csv_helper`; `run.py` is run by `run_experiment`, which
+uses Omnigent's Python.
 
 ## Log permissions
 
@@ -240,8 +263,6 @@ Files from runs: see "Run output" above. Each experiment can be rerun with `pyth
 its folder.
 
 Open questions:
-- The Experiment Runner specialist runs code it writes itself. Give it a sandbox in its
-  `config.yaml` (`os_env.sandbox`: write only to `runs/`, no network) before enabling it.
 - Agents pass `run_id` to the record and log tools themselves; it defaults to `"default"`. The
   Director should state the run ID in every task.
 - The shared record has no field for the cycle number or kind for common knowledge. For now the
@@ -322,7 +343,7 @@ Record kinds (shared contract): `literature`, `hypothesis`, `plan`, `experiment`
 Run this from the repo root or this folder to verify the entire hierarchy and discovered tools:
 
 ```bash
-python3 -c "
+~/.local/share/uv/tools/omnigent/bin/python3 -c "
 from pathlib import Path
 from omnigent.spec.parser import parse
 def show(s, d=0):
@@ -343,7 +364,8 @@ are deterministic tools implemented in [lab/tools.py](../../../lab/tools.py).
 
 Omnigent finds local tools in `tools/python/*.py` inside each agent's folder, which is also how tool
 permissions are enforced:
-- **Specialists** carry domain tools: `literature_specialist` uses `search_papers`;
+- **Specialists** carry domain tools: `literature_specialist` uses `search_papers` and
+  `read_paper` (reads a found paper's page through Bright Data; only allowed publishers);
   `hypothesis_specialist` uses `list_materials` and `material_properties`;
   `experiment_runner_specialist` uses `simulate_stack`, `optimize_thicknesses` and
   `run_experiment`; `analysis_specialist` uses `compare_to_benchmark`.
@@ -373,6 +395,11 @@ Tools return data and never decide. These rules are covered by `tests/test_tools
   `runs/<run_id>/logs/<department>/<level>.jsonl`; `department` entries also go into the run's
   `common_knowledge.json`. Entry IDs look like `literature.specialist.3`.
 - **`read_department_logs` / `read_all_department_logs`**: see "Log permissions".
+- **`read_paper(url, max_chars)`**: reads a paper's page as text through Bright Data's
+  `scrape_as_markdown`. Only arXiv, Nature, Springer and IEEE pages, or doi.org links with a
+  `10.1038`, `10.1007`, `10.1186`, `10.1109` or `10.48550` DOI, are opened; anything else is
+  refused, so it cannot search or browse the wider web. Returns the text with
+  `origin: brightdata`, or an `error`, never a guess.
 - **`package_run(run_id)`**: zips `runs/<run_id>/` into `runs/<run_id>.zip`, including the record,
   logs, experiments, knowledge reports and `common_knowledge.json`.
 
@@ -391,21 +418,66 @@ uv pip install -e .
 folder, which the agents' `run.py` and `merge.py` need. `pyproject.toml` lists those packages
 explicitly; without that, setuptools stops with "Multiple top-level packages discovered".
 
-Omnigent:
+Omnigent, from the repo root:
 
 ```bash
-omni config list                     # check the Claude credential (subscription or API key)
-omni start                           # local server and web UI
-omni run backend/app/agents          # start the Lab Director
+source .venv/bin/activate
+export PYTHONPATH="$PWD"
+omni stop
+omni start
+omni run backend/app/agents
 ```
 
-Start Omnigent from a terminal where `.venv` is active, so the agents' `python` is the same one.
+Then type the task at the prompt, starting with a run ID, e.g. `Run ID: smoke01. Cycle 1 only. …`.
+
+Why each step matters:
+- **`PYTHONPATH`:** Omnigent runs agent tools with its own Python, not `.venv`. Without the repo
+  root on `PYTHONPATH`, every lab tool fails with `No module named 'lab'`.
+- **Secrets and the environment:** Omnigent passes only an allowlist of variables (`PATH`,
+  `PYTHONPATH`, `HOME`, …) to the processes that run agents and tools; API keys exported in your
+  shell are dropped on purpose. So tools that need a key read it from the repo's `.env` file
+  (`read_paper` does this for `BRIGHTDATA_API_TOKEN`), and `${VAR}` in an agent config will not
+  see shell exports. The server keeps running in the background, so restart it (`omni stop`,
+  `omni start`) after changing `PYTHONPATH`.
+- **No `-p`:** `omni run -p "…"` is one-shot. It stops the whole run as soon as the Director's
+  first turn ends, which kills the departments still working. Type the task in the interactive
+  session instead and keep it open until the Director reports.
+- `omni config list` shows the Claude credential; `omni usage` shows the cost of runs.
+
+Checks:
+- Bright Data MCP reachable with your token:
+  `curl -s -o /dev/null -w "%{http_code}\n" -X POST https://mcp.brightdata.com/mcp -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"check","version":"0"}}}'`
+  prints `200`.
+- `read_paper` works from a clean environment like Omnigent's:
+  `env -i PATH="$PATH" HOME="$HOME" PYTHONPATH="$PWD" ~/.local/share/uv/tools/omnigent/bin/python3 -c "from lab.tools import read_paper; print(read_paper('https://arxiv.org/abs/2102.02965', 300))"`.
+- A run's output: `ls -R runs/<run_id>`.
+- Omnigent's own logs: `~/.omnigent/logs/` (`runner`, `server`, `host`, `cli`).
+
 Keep secrets (`ANTHROPIC_API_KEY`, `BRIGHTDATA_API_TOKEN`, …) in `.env`, never in issues, configs
 or code. Reference them as `${VAR}` in agent configs.
 
 ## Change log
 
 Newest first.
+
+- **Sandboxed file access for six agents.** Tonight's runs showed that no agent had file or shell
+  tools, so the Experiment Runner could not write `run.py` and Knowledge & Memory could not write
+  `merge.py` or its reports. Those agents, plus the three that read CSV files, now have an
+  `os_env` block; see "File access (sandboxed)". Their prompts have a "File tools" section.
+
+- **Literature specialist reads papers with `read_paper`.** The smoke test (run `smoke01`)
+  could not verify any design because the specialist had no access to abstracts or full text.
+  A first attempt declared the Bright Data MCP server in the specialist's config, but Omnigent
+  drops shell secrets from agent processes, so the token never arrived (`401 Invalid API Token
+  Format`, runs `smoke02` and `smoke03`). `read_paper` in `lab/tools.py` now calls Bright
+  Data's `scrape_as_markdown` itself, reads the token from `.env`, and only opens allowed
+  publisher pages, so the publisher rule is enforced in code. The prompt also warns that
+  `offline_fallback` summaries are not published abstracts.
+- **Tools that take a `dict` now accept fields.** In strict mode Omnigent made `write_record`'s
+  `content` and `log_to_common_knowledge`'s `payload` reject every field; those wrappers now use
+  `@tool(strict=False)`, checked by `tests/test_agent_tool_schemas.py`.
+- **Prompts say how to call sub-agents and pass the run ID.** Sub-agents are called with
+  `sys_session_send` (`agent` = folder name), and replies come back through `sys_read_inbox`.
 
 - **One Common Knowledge per run.** `runs/<run_id>/common_knowledge.json` replaces the single
   `runs/common_knowledge.json` shared by all runs. A run is one whole research project across all

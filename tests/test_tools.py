@@ -396,3 +396,48 @@ def test_common_knowledge_is_per_run_and_packaged(tmp_path, monkeypatch):
 
     with zipfile.ZipFile(tools.package_run("run_a")) as z:
         assert "common_knowledge.json" in z.namelist()
+
+
+@pytest.mark.parametrize("url, allowed", [
+    ("https://arxiv.org/abs/2102.02965", True),
+    ("https://www.nature.com/articles/nature13883", True),
+    ("https://link.springer.com/article/10.1007/s00542-020-05091-2", True),
+    ("https://ieeexplore.ieee.org/document/9908390", True),
+    ("https://doi.org/10.1038/ncomms13729", True),
+    ("https://doi.org/10.1126/science.aai7899", False),
+    ("https://www.science.org/doi/10.1126/science.aai7899", False),
+    ("https://evil.example/nature.com", False),
+    ("https://nature.com.evil.example/x", False),
+    ("file:///etc/passwd", False),
+])
+def test_read_paper_only_opens_allowed_publishers(url, allowed, monkeypatch):
+    monkeypatch.setattr(tools, "_brightdata_call", lambda *a, **k: (_ for _ in ()).throw(AssertionError("network")))
+    assert tools._paper_url_allowed(url) is allowed
+    if not allowed:
+        assert "not allowed" in tools.read_paper(url)["error"]
+
+
+def test_read_paper_returns_text_or_error_never_a_guess(monkeypatch):
+    monkeypatch.setattr(tools, "_brightdata_token", lambda: "t")
+    replies = iter([("s1", []), ("s1", []), ("s1", [{"result": {"content": [{"type": "text", "text": "abc" * 10}]}}])])
+    monkeypatch.setattr(tools, "_brightdata_call", lambda *a, **k: next(replies))
+    ok = tools.read_paper("https://arxiv.org/abs/1", max_chars=5)
+    assert ok["origin"] == "brightdata" and ok["markdown"] == "abcab" and ok["truncated"] is True
+
+    def fail(*a, **k):
+        raise OSError("401 Unauthorized")
+    monkeypatch.setattr(tools, "_brightdata_call", fail)
+    assert "401" in tools.read_paper("https://arxiv.org/abs/1")["error"]
+
+    monkeypatch.setattr(tools, "_brightdata_token", lambda: "")
+    assert "BRIGHTDATA_API_TOKEN" in tools.read_paper("https://arxiv.org/abs/1")["error"]
+
+
+def test_brightdata_token_falls_back_to_dotenv(tmp_path, monkeypatch):
+    monkeypatch.delenv("BRIGHTDATA_API_TOKEN", raising=False)
+    fake_lab = tmp_path / "lab"; fake_lab.mkdir()
+    (tmp_path / ".env").write_text('OTHER=1\nBRIGHTDATA_API_TOKEN="abc-123"\n')
+    monkeypatch.setattr(tools, "__file__", str(fake_lab / "tools.py"))
+    assert tools._brightdata_token() == "abc-123"
+    monkeypatch.setenv("BRIGHTDATA_API_TOKEN", "from-env")
+    assert tools._brightdata_token() == "from-env"

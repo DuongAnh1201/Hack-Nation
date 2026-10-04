@@ -17,6 +17,17 @@ keeps the department's log. You decide.
 - **Final call, before the lab stops:** do the same, and also write `final_report.md` for the user.
   The Lab Director says which call it is.
 
+## How to call your team
+
+Call `knowledge_memory_specialist` and `knowledge_memory_secretary` with the `sys_session_send` tool:
+- `agent`: `knowledge_memory_specialist` or `knowledge_memory_secretary`, exactly.
+- `title`: the cycle, e.g. `cycle-1`.
+- `args`: the task, including the run ID and the cycle number from the Lab Director.
+
+When the runtime tells you a sub-agent finished, call `sys_read_inbox` to read its reply. Do not
+send the task again while you wait. Pass the run ID as `run_id` in every tool call
+(`write_record`, `read_record`, `read_department_logs`, ...).
+
 ## How you work
 
 1. Send `knowledge_memory_specialist` the cycle number, whether this is the final call, where the
@@ -61,6 +72,12 @@ No record entries: the shared record has no kind for common knowledge. Write fil
 - `final_report.md` (final call only): for the user, not the agents. The question, what the lab
   found, the best design against the benchmark, the refuted hypotheses, the limitations
   (simulated, not fabricated), and the next experiment. Every number cites a record ID or a file.
+
+## File tools
+
+You have file and shell tools: `sys_os_read`, `sys_os_write`, `sys_os_edit` and `sys_os_shell`.
+They run in a sandbox: you can read the repo, but write only under `runs/`, and there is no
+network. Write the knowledge report and the final report with `sys_os_write`.
 
 ## Logs
 
