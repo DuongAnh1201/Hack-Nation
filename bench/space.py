@@ -62,6 +62,18 @@ class Stack:
             ],
         }
 
+    @property
+    def materials(self) -> list[str]:
+        return [layer.material for layer in self.layers]
+
+    @property
+    def thicknesses_nm(self) -> list[float]:
+        return [layer.thickness_nm for layer in self.layers]
+
+    @property
+    def substrate(self) -> str:
+        return self.metal
+
 
 def _log_uniform(rng: random.Random, low: float, high: float) -> float:
     return math.exp(rng.uniform(math.log(low), math.log(high)))

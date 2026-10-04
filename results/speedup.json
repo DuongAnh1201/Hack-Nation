@@ -1,0 +1,419 @@
+{
+  "fake": false,
+  "source": "results/benchmark.json",
+  "source_sha256": "cd5989e042dd5003b2a1dddce1f6d8394d63400adc7aaf56fe0db451d338c652",
+  "command": "python -m analysis.speedup results/benchmark.json",
+  "target_w_m2": 50.0,
+  "budget": 100,
+  "focus": "agent_lab",
+  "method_order": [
+    "agent_lab",
+    "random",
+    "alternating",
+    "bayes_opt",
+    "genetic_algorithm",
+    "agent_lab_ablation"
+  ],
+  "colors": {
+    "agent_lab": "#2a78d6",
+    "random": "#1baf7a",
+    "alternating": "#eda100",
+    "bayes_opt": "#eb6834",
+    "genetic_algorithm": "#e87ba4",
+    "agent_lab_ablation": "#008300"
+  },
+  "methods": {
+    "agent_lab": {
+      "label": "Agent lab",
+      "runs": 10,
+      "reached": 9,
+      "success_rate": 0.9,
+      "success_rate_ci95": [
+        0.5958499704752279,
+        0.982123787103926
+      ],
+      "median_evals": 34.0,
+      "median_censored": false,
+      "best_w_m2_median": 55.252700000000004,
+      "best_w_m2_max": 57.906
+    },
+    "random": {
+      "label": "Random search",
+      "runs": 10,
+      "reached": 3,
+      "success_rate": 0.3,
+      "success_rate_ci95": [
+        0.10779126655639398,
+        0.6032218546540291
+      ],
+      "median_evals": null,
+      "median_censored": true,
+      "best_w_m2_median": 47.035849999999996,
+      "best_w_m2_max": 53.9845
+    },
+    "alternating": {
+      "label": "Alternating",
+      "runs": 10,
+      "reached": 7,
+      "success_rate": 0.7,
+      "success_rate_ci95": [
+        0.3967781453459709,
+        0.892208733443606
+      ],
+      "median_evals": 27.0,
+      "median_censored": false,
+      "best_w_m2_median": 50.45855,
+      "best_w_m2_max": 56.9969
+    },
+    "bayes_opt": {
+      "label": "Bayesian optimization",
+      "runs": 10,
+      "reached": 10,
+      "success_rate": 1.0,
+      "success_rate_ci95": [
+        0.7224671969739421,
+        0.9999999999999999
+      ],
+      "median_evals": 45.0,
+      "median_censored": false,
+      "best_w_m2_median": 51.48035,
+      "best_w_m2_max": 54.9972
+    },
+    "genetic_algorithm": {
+      "label": "Genetic algorithm",
+      "runs": 10,
+      "reached": 8,
+      "success_rate": 0.8,
+      "success_rate_ci95": [
+        0.4901624691221323,
+        0.9433178490622331
+      ],
+      "median_evals": 60.0,
+      "median_censored": false,
+      "best_w_m2_median": 50.76825,
+      "best_w_m2_max": 54.1753
+    },
+    "agent_lab_ablation": {
+      "label": "Agent lab, no analyst feedback (ablation)",
+      "runs": 10,
+      "reached": 0,
+      "success_rate": 0.0,
+      "success_rate_ci95": [
+        0.0,
+        0.2775328030260577
+      ],
+      "median_evals": null,
+      "median_censored": true,
+      "best_w_m2_median": 31.07405,
+      "best_w_m2_max": 34.7554
+    }
+  },
+  "speedups": [
+    {
+      "focus": "agent_lab",
+      "baseline": "random",
+      "point": 2.9411764705882355,
+      "ci95": [
+        2.6176470588235294,
+        3.8461538461538463
+      ],
+      "baseline_censored": true,
+      "focus_censored": false,
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 12345,
+        "method": "percentile, independent resampling per method"
+      },
+      "claim": "The agent lab needed about 2.9× fewer evaluations than random search (95% CI 2.6×–3.8×); we claim at least 2.6×. Random search reached the target in fewer than half of its runs, so its median is capped at the budget of 100 and the true speed-up is larger.",
+      "supported": true
+    },
+    {
+      "focus": "agent_lab",
+      "baseline": "alternating",
+      "point": 0.7941176470588235,
+      "ci95": [
+        0.35714285714285715,
+        3.076923076923077
+      ],
+      "baseline_censored": false,
+      "focus_censored": false,
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 12345,
+        "method": "percentile, independent resampling per method"
+      },
+      "claim": "No speed-up: the agent lab needed 1.3× as many evaluations as Alternating (median).",
+      "supported": false
+    },
+    {
+      "focus": "agent_lab",
+      "baseline": "bayes_opt",
+      "point": 1.3235294117647058,
+      "ci95": [
+        0.75,
+        1.8076923076923077
+      ],
+      "baseline_censored": false,
+      "focus_censored": false,
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 12345,
+        "method": "percentile, independent resampling per method"
+      },
+      "claim": "The agent lab needed 1.3× fewer evaluations than Bayesian optimization in the point estimate, but the 95% CI (0.8×–1.8×) includes no speed-up, so no speed-up is claimed.",
+      "supported": false
+    },
+    {
+      "focus": "agent_lab",
+      "baseline": "genetic_algorithm",
+      "point": 1.7647058823529411,
+      "ci95": [
+        0.9705882352941176,
+        2.9615384615384617
+      ],
+      "baseline_censored": false,
+      "focus_censored": false,
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 12345,
+        "method": "percentile, independent resampling per method"
+      },
+      "claim": "The agent lab needed 1.8× fewer evaluations than Genetic algorithm in the point estimate, but the 95% CI (1.0×–3.0×) includes no speed-up, so no speed-up is claimed.",
+      "supported": false
+    },
+    {
+      "focus": "agent_lab",
+      "baseline": "agent_lab_ablation",
+      "point": 2.9411764705882355,
+      "ci95": [
+        2.9411764705882355,
+        3.8461538461538463
+      ],
+      "baseline_censored": true,
+      "focus_censored": false,
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 12345,
+        "method": "percentile, independent resampling per method"
+      },
+      "claim": "The agent lab needed about 2.9× fewer evaluations than the ablation without analyst feedback (95% CI 2.9×–3.8×); we claim at least 2.9×. The ablation without analyst feedback reached the target in fewer than half of its runs, so its median is capped at the budget of 100 and the true speed-up is larger.",
+      "supported": true
+    }
+  ],
+  "curves": {
+    "agent_lab": [
+      [
+        0,
+        0.0
+      ],
+      [
+        21,
+        0.1
+      ],
+      [
+        26,
+        0.2
+      ],
+      [
+        26,
+        0.3
+      ],
+      [
+        28,
+        0.4
+      ],
+      [
+        34,
+        0.5
+      ],
+      [
+        34,
+        0.6
+      ],
+      [
+        34,
+        0.7
+      ],
+      [
+        34,
+        0.8
+      ],
+      [
+        37,
+        0.9
+      ],
+      [
+        100,
+        0.9
+      ]
+    ],
+    "random": [
+      [
+        0,
+        0.0
+      ],
+      [
+        66,
+        0.1
+      ],
+      [
+        83,
+        0.2
+      ],
+      [
+        89,
+        0.3
+      ],
+      [
+        100,
+        0.3
+      ]
+    ],
+    "alternating": [
+      [
+        0,
+        0.0
+      ],
+      [
+        8,
+        0.1
+      ],
+      [
+        10,
+        0.2
+      ],
+      [
+        20,
+        0.3
+      ],
+      [
+        22,
+        0.4
+      ],
+      [
+        27,
+        0.5
+      ],
+      [
+        30,
+        0.6
+      ],
+      [
+        80,
+        0.7
+      ],
+      [
+        100,
+        0.7
+      ]
+    ],
+    "bayes_opt": [
+      [
+        0,
+        0.0
+      ],
+      [
+        15,
+        0.1
+      ],
+      [
+        21,
+        0.2
+      ],
+      [
+        32,
+        0.3
+      ],
+      [
+        34,
+        0.4
+      ],
+      [
+        45,
+        0.5
+      ],
+      [
+        47,
+        0.6
+      ],
+      [
+        47,
+        0.7
+      ],
+      [
+        49,
+        0.8
+      ],
+      [
+        55,
+        0.9
+      ],
+      [
+        66,
+        1.0
+      ],
+      [
+        100,
+        1.0
+      ]
+    ],
+    "genetic_algorithm": [
+      [
+        0,
+        0.0
+      ],
+      [
+        28,
+        0.1
+      ],
+      [
+        32,
+        0.2
+      ],
+      [
+        33,
+        0.3
+      ],
+      [
+        54,
+        0.4
+      ],
+      [
+        60,
+        0.5
+      ],
+      [
+        67,
+        0.6
+      ],
+      [
+        77,
+        0.7
+      ],
+      [
+        99,
+        0.8
+      ],
+      [
+        100,
+        0.8
+      ]
+    ],
+    "agent_lab_ablation": [
+      [
+        0,
+        0.0
+      ],
+      [
+        100,
+        0.0
+      ]
+    ]
+  },
+  "warnings": [],
+  "definitions": {
+    "median_evals": "evaluations by which half of the runs had reached the target (ceil(n/2)-th smallest; failed runs count as not reached)",
+    "speedup": "median(baseline) / median(focus); censored baseline median replaced by the budget (understates the speed-up)",
+    "ci95": "percentile bootstrap, 10000 resamples, seed 12345, runs resampled within each method"
+  }
+}

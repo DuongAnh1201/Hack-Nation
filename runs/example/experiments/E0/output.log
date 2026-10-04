@@ -1,0 +1,6 @@
+Starting Experiment E0 in /home/koiisme/code/Phys.io/runs/example/experiments/E0
+[E0-001] P_net = -20.08 W/m2, R_solar = 0.9700, eps_win = 0.0530
+[E0-002] P_net = 30.34 W/m2, R_solar = 0.9763, eps_win = 0.6075
+[E0-003] P_net = -100.30 W/m2, R_solar = 0.8835, eps_win = 0.0649
+[E0-004] INVALID: 6 layers > 5 allowed
+Wrote 4 rows to results.csv

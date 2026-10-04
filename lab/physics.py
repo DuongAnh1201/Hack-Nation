@@ -122,6 +122,15 @@ def evaluation_budget():
 def _claim_evaluation():
     global _count
     with _lock:
+        ledger_path = os.environ.get("LAB_EVAL_LEDGER")
+        if ledger_path and os.path.exists(ledger_path):
+            try:
+                with open(ledger_path, "r", encoding="utf-8") as fh:
+                    ledger_lines = sum(1 for line in fh if line.strip())
+                if ledger_lines > _count:
+                    _count = ledger_lines
+            except Exception:
+                pass
         if _budget is not None and _count >= _budget:
             raise EvaluationBudgetExceeded(f"evaluation budget of {_budget} spent")
         _count += 1

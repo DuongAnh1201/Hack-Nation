@@ -17,6 +17,7 @@ from pathlib import Path
 
 from lab import materials as _mat
 from lab import physics as _phys
+from lab.csv_helper import read_results_csv, write_results_csv
 
 logger = logging.getLogger("lab.tools")
 
@@ -634,5 +635,35 @@ if __name__ == "__main__":
         "solar_reflectance": best_r,
         "evaluations": evals,
     }
+
+
+def package_run(run_id: str = "default") -> str:
+    """Package a research run directory runs/<run_id>/ into runs/<run_id>.zip (Issue #37).
+
+    Args:
+        run_id: Identifier of the run directory under runs/
+
+    Returns:
+        The resolved absolute path string of the created zip archive.
+    """
+    import zipfile
+
+    run_dir = Path("runs") / run_id
+    if not run_dir.exists():
+        raise FileNotFoundError(f"Run directory not found: {run_dir}")
+
+    zip_path = Path("runs") / f"{run_id}.zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file in run_dir.rglob("*"):
+            if file.is_file():
+                arcname = file.relative_to(run_dir)
+                zipf.write(file, arcname)
+
+    logger.info("Packaged %s into %s", run_dir, zip_path)
+    return str(zip_path.resolve())
+
+
+# Alias search_papers -> search_academic_papers for Issue #36
+search_papers = search_academic_papers
 
 

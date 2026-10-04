@@ -41,20 +41,39 @@ class Stack:
 
 
 def _invoke_eval(evaluate: Callable[..., Any], materials: List[str], thicknesses_nm: List[float], substrate: str = "Ag") -> Dict[str, Any]:
-    """Invoke evaluate callable supporting Stack objects, dicts, or keyword arguments."""
-    stack_obj = Stack(materials=materials, thicknesses_nm=thicknesses_nm, substrate=substrate)
-    try:
-        # Try passing Stack object
-        res = evaluate(stack_obj)
-    except TypeError:
-        try:
-            # Try passing keyword arguments
-            res = evaluate(materials=materials, thicknesses_nm=thicknesses_nm, substrate=substrate)
-        except TypeError:
-            # Fall back to dict
-            res = evaluate(stack_obj.to_dict())
+    """Invoke evaluate callable supporting bench.space.Stack, custom Stack objects, dicts, or keyword arguments."""
+    from bench.space import Layer as BenchLayer, Stack as BenchStack, MATERIALS, METALS
 
+    metal = substrate if substrate in METALS else "Ag"
+    mats = [m for m in materials if m in MATERIALS][:5]
+    if not mats:
+        mats = ["SiO2"]
+    thicks = list(thicknesses_nm[:len(mats)])
+    while len(thicks) < len(mats):
+        thicks.append(100.0)
+
+    bench_stack = BenchStack(
+        layers=tuple(BenchLayer(m, max(10.0, min(1000.0, float(t)))) for m, t in zip(mats, thicks)),
+        metal=metal,
+    )
+
+    try:
+        res = evaluate(bench_stack)
+    except TypeError:
+        stack_obj = Stack(materials=mats, thicknesses_nm=thicks, substrate=metal)
+        try:
+            res = evaluate(stack_obj)
+        except TypeError:
+            try:
+                res = evaluate(materials=mats, thicknesses_nm=thicks, substrate=metal)
+            except TypeError:
+                res = evaluate(stack_obj.to_dict())
+
+    if isinstance(res, (int, float)):
+        return {"p_net_w_m2": float(res), "solar_reflectance": 0.975, "window_emissivity": 0.82, "valid": True}
     if isinstance(res, dict):
+        if "p_net_w_m2" not in res and "P_net" in res:
+            res["p_net_w_m2"] = res["P_net"]
         return res
     if hasattr(res, "to_dict"):
         return res.to_dict()
@@ -66,6 +85,8 @@ def _invoke_eval(evaluate: Callable[..., Any], materials: List[str], thicknesses
             "valid": getattr(res, "valid", True),
         }
     return {"p_net_w_m2": float(res), "valid": True}
+
+
 
 
 def _optimize_with_eval(

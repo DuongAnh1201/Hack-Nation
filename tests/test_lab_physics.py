@@ -101,3 +101,43 @@ def test_control_is_not_counted_and_matches_published_reflectance():
 def test_search_space_excludes_hafnia():
     assert "HfO2" not in P.ALLOWED_MATERIALS
     assert P.MAX_LAYERS == 5
+
+
+def test_zero_thickness_and_vacuum_layers_do_not_crash():
+    # Zero thickness returns invalid without crashing
+    res_zero = P.simulate_stack(["SiO2"], [0.0], "Ag")
+    assert res_zero["valid"] is False
+    assert "thickness" in res_zero["reason"].lower() or "bound" in res_zero["reason"].lower()
+
+    # Low-index dielectric approaching vacuum index does not divide by zero
+    n_vacuum = np.ones(7, dtype=complex)
+    r_vac = P._reflectance(np.array([n_vacuum]), np.array([100.0]), np.array([0.1 + 3.0j] * 7), np.array([0.55] * 7), np.array([0.0]))
+    assert np.all(np.isfinite(r_vac))
+
+
+def test_evaluation_counter_across_two_separate_processes(tmp_path):
+    import subprocess
+    import sys
+
+    ledger = tmp_path / "shared_ledger.jsonl"
+    code1 = f"""
+import os, sys
+os.environ['LAB_EVAL_LEDGER'] = r'{ledger}'
+from lab import physics as P
+P.simulate_stack(['SiO2'], [100.0])
+P.simulate_stack(['TiO2'], [50.0])
+"""
+    code2 = f"""
+import os, sys
+os.environ['LAB_EVAL_LEDGER'] = r'{ledger}'
+from lab import physics as P
+P.simulate_stack(['Si3N4'], [80.0])
+"""
+    p1 = subprocess.run([sys.executable, "-c", code1], capture_output=True, text=True, check=True)
+    p2 = subprocess.run([sys.executable, "-c", code2], capture_output=True, text=True, check=True)
+
+    assert ledger.exists()
+    lines = ledger.read_text().splitlines()
+    assert len(lines) == 3
+    data = [json.loads(line) for line in lines]
+    assert [d["evaluation"] for d in data] == [1, 2, 3]
