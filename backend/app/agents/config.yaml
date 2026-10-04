@@ -13,10 +13,10 @@ instructions: prompt.md
 tools:
   agents:
     - literature
-    # - hypothesis  # disabled until nested delegation is proven
-    # - planning  # disabled until nested delegation is proven
-    # - experiment_runner  # disabled until nested delegation is proven
-    # - analysis  # disabled until nested delegation is proven
-    # - review_safety  # disabled until nested delegation is proven
-    # - knowledge_memory  # disabled until nested delegation is proven
+    - hypothesis
+    - planning
+    - experiment_runner
+    - analysis
+    - review_safety
+    - knowledge_memory
 

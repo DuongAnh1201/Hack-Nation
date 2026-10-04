@@ -1,0 +1,2 @@
+auto_open_conversation: true
+default_agent: backend/app/agents
