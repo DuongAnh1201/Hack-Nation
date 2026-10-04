@@ -203,3 +203,73 @@ def test_execute_experiment_script(tmp_path, monkeypatch):
     assert "Outputs:" in content
 
 
+def test_write_and_read_results_csv(tmp_path):
+    from lab.csv_helper import write_results_csv, read_results_csv
+
+    csv_file = tmp_path / "results.csv"
+    rows = [
+        {
+            "design_id": "E3-001",
+            "materials": ["SiO2", "TiO2", "SiO2"],
+            "thicknesses_nm": [120.0, 85.0, 640.0],
+            "substrate": "Ag",
+            "p_net_w_m2": 38.4,
+            "solar_reflectance": 0.962,
+            "window_emissivity": 0.71,
+            "valid": True,
+            "reason": "",
+            "seed": 0,
+        },
+        {
+            "design_id": "E3-002",
+            "materials": ["SiO2"] * 6,
+            "thicknesses_nm": [50.0] * 6,
+            "substrate": "Ag",
+            "p_net_w_m2": None,
+            "valid": False,
+            "reason": "6 layers > 5",
+            "seed": 1,
+        },
+    ]
+
+    out_path = write_results_csv(rows, csv_file)
+    assert out_path == str(csv_file.resolve())
+    assert csv_file.exists()
+
+    loaded = read_results_csv(csv_file)
+    assert len(loaded) == 2
+    assert loaded[0]["design_id"] == "E3-001"
+    assert loaded[0]["materials"] == ["SiO2", "TiO2", "SiO2"]
+    assert loaded[0]["thicknesses_nm"] == [120.0, 85.0, 640.0]
+    assert loaded[0]["p_net_w_m2"] == 38.4
+    assert loaded[0]["valid"] is True
+    assert loaded[1]["valid"] is False
+    assert "6 layers > 5" in loaded[1]["reason"]
+
+
+def test_package_run(tmp_path, monkeypatch):
+    import zipfile
+    from pathlib import Path
+    monkeypatch.chdir(tmp_path)
+
+    run_dir = tmp_path / "runs" / "test_pkg"
+    run_dir.mkdir(parents=True)
+    (run_dir / "record.jsonl").write_text('{"id": "L1"}\n')
+    (run_dir / "final_report.md").write_text("# Report\n")
+
+    pkg_path = tools.package_run("test_pkg")
+    assert Path(pkg_path).exists()
+    assert pkg_path.endswith("test_pkg.zip")
+
+    with zipfile.ZipFile(pkg_path, "r") as z:
+        names = z.namelist()
+        assert "record.jsonl" in names
+        assert "final_report.md" in names
+
+
+def test_search_papers_alias():
+    assert tools.search_papers is tools.search_academic_papers
+    res = tools.search_papers("radiative cooling", limit=1)
+    assert len(res) == 1
+
+

@@ -1,0 +1,5 @@
+design_id,materials,thicknesses_nm,substrate,n_layers,p_net_w_m2,solar_reflectance,window_emissivity,valid,reason,seed
+E0-001,SiO2|TiO2|SiO2|TiO2|SiO2,100.0|50.0|100.0|50.0|100.0,Ag,5,-20.08,0.9700,0.0530,true,,0
+E0-002,Si3N4|SiO2|Si3N4|SiO2,115.0|390.0|75.0|410.0,Ag,4,30.34,0.9763,0.6075,true,,0
+E0-003,Al2O3|SiO2|Al2O3,150.0|200.0|150.0,Al,3,-100.30,0.8835,0.0649,true,,1
+E0-004,SiO2|TiO2|SiO2|TiO2|SiO2|SiO2,50.0|50.0|50.0|50.0|50.0|50.0,Ag,6,,,,false,6 layers > 5,2
