@@ -11,7 +11,7 @@ write one JSON file the UI reads:
 The solar part (normal incidence) is used below 2.5 um and the thermal part
 (near-normal) above, downsampled so the file stays small.
 
-Run:  python -m analysis.export_spectra runs/<run_id>/record.jsonl --out frontend/public/demo/spectra.json
+Run:  python -m analysis.export_spectra runs/<run_id>/record.jsonl --out technology/public/demo/spectra.json
       (add --lab-path <dir containing lab/> while the simulator is not on main yet)
 """
 
@@ -91,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m analysis.export_spectra", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("record")
-    ap.add_argument("--out", default="frontend/public/demo/spectra.json")
+    ap.add_argument("--out", default="technology/public/demo/spectra.json")
     ap.add_argument("--lab-path", help="directory that contains the lab/ package (default: repo root)")
     args = ap.parse_args(argv)
     if args.lab_path:

@@ -2,7 +2,7 @@
 
 Open `index.html` through a local web server (videos and textures will not load from file://):
 
-    cd Phys.io_Mission
+    cd frontend
     python -m http.server 8000
 
 Then visit http://localhost:8000

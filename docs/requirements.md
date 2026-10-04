@@ -34,9 +34,9 @@ scientific contribution.
 **Build order** (from the original brief): science and the loop first, then the 3D view, then
 the courses, chat and theme. If time runs short, cut from the bottom of §9, never from §2.
 
-## 3. 3D visualization (`frontend/src/scenes/`)
+## 3. 3D visualization (`technology/src/scenes/`)
 
-Stack: React + react-three-fiber + drei (already in `frontend/package.json`).
+Stack: React + react-three-fiber + drei (already in `technology/package.json`).
 
 | ID | Pri | Requirement | Acceptance criteria |
 |---|---|---|---|
@@ -54,7 +54,7 @@ Stack: React + react-three-fiber + drei (already in `frontend/package.json`).
 Data contract: trajectory frames and the research-record format are in [interfaces.md](interfaces.md)
 (y-up, motion in the x–y plane).
 
-## 4. Courses (`frontend/src/components/courses/`, content as files)
+## 4. Courses (`technology/src/components/courses/`, content as files)
 
 Courses teach through the scientific method: **predict → simulate → compare → explain**. The
 original brief warns against an "educational chatbot". Every lesson must have the student run
@@ -96,7 +96,7 @@ Lesson file schema (proposal):
 }
 ```
 
-## 5. AI chat with Omnigent (`frontend/src/components/chat/`, `backend/app/agents/`)
+## 5. AI chat with Omnigent (`technology/src/components/chat/`, `backend/app/agents/`)
 
 Naming: the framework is **Omnigent** (open source, `omnigent-ai/omnigent`). The backend README's
 "Databricks OmniAgent" refers to the same thing; use "Omnigent" everywhere.
