@@ -9,13 +9,3 @@ executor:
     harness: claude-sdk
 
 instructions: prompt.md
-
-# Bright Data MCP: reads paper pages (abstracts, full text) for papers search_papers found.
-# The token comes from BRIGHTDATA_API_TOKEN in the environment Omnigent was started from
-# (load .env before `omni start`). Never put the token in this file.
-tools:
-  brightdata:
-    type: mcp
-    url: https://mcp.brightdata.com/mcp
-    headers:
-      Authorization: "Bearer ${BRIGHTDATA_API_TOKEN}"

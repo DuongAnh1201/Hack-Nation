@@ -343,9 +343,8 @@ are deterministic tools implemented in [lab/tools.py](../../../lab/tools.py).
 
 Omnigent finds local tools in `tools/python/*.py` inside each agent's folder, which is also how tool
 permissions are enforced:
-- **Specialists** carry domain tools: `literature_specialist` uses `search_papers`, plus the
-  Bright Data MCP server (`scrape_as_markdown`, `scrape_batch`) to read the pages of papers that
-  `search_papers` found, never to search the web;
+- **Specialists** carry domain tools: `literature_specialist` uses `search_papers` and
+  `read_paper` (reads a found paper's page through Bright Data; only allowed publishers);
   `hypothesis_specialist` uses `list_materials` and `material_properties`;
   `experiment_runner_specialist` uses `simulate_stack`, `optimize_thicknesses` and
   `run_experiment`; `analysis_specialist` uses `compare_to_benchmark`.
@@ -375,6 +374,11 @@ Tools return data and never decide. These rules are covered by `tests/test_tools
   `runs/<run_id>/logs/<department>/<level>.jsonl`; `department` entries also go into the run's
   `common_knowledge.json`. Entry IDs look like `literature.specialist.3`.
 - **`read_department_logs` / `read_all_department_logs`**: see "Log permissions".
+- **`read_paper(url, max_chars)`**: reads a paper's page as text through Bright Data's
+  `scrape_as_markdown`. Only arXiv, Nature, Springer and IEEE pages, or doi.org links with a
+  `10.1038`, `10.1007`, `10.1186`, `10.1109` or `10.48550` DOI, are opened; anything else is
+  refused, so it cannot search or browse the wider web. Returns the text with
+  `origin: brightdata`, or an `error`, never a guess.
 - **`package_run(run_id)`**: zips `runs/<run_id>/` into `runs/<run_id>.zip`, including the record,
   logs, experiments, knowledge reports and `common_knowledge.json`.
 
@@ -397,7 +401,6 @@ Omnigent, from the repo root:
 
 ```bash
 source .venv/bin/activate
-set -a; source .env; set +a
 export PYTHONPATH="$PWD"
 omni stop
 omni start
@@ -409,10 +412,12 @@ Then type the task at the prompt, starting with a run ID, e.g. `Run ID: smoke01.
 Why each step matters:
 - **`PYTHONPATH`:** Omnigent runs agent tools with its own Python, not `.venv`. Without the repo
   root on `PYTHONPATH`, every lab tool fails with `No module named 'lab'`.
-- **`source .env` before `omni start`:** agent configs read secrets such as
-  `${BRIGHTDATA_API_TOKEN}` from the environment the Omnigent server was started from. The server
-  keeps running in the background, so restart it (`omni stop`, `omni start`) after changing
-  `.env` or `PYTHONPATH`.
+- **Secrets and the environment:** Omnigent passes only an allowlist of variables (`PATH`,
+  `PYTHONPATH`, `HOME`, …) to the processes that run agents and tools; API keys exported in your
+  shell are dropped on purpose. So tools that need a key read it from the repo's `.env` file
+  (`read_paper` does this for `BRIGHTDATA_API_TOKEN`), and `${VAR}` in an agent config will not
+  see shell exports. The server keeps running in the background, so restart it (`omni stop`,
+  `omni start`) after changing `PYTHONPATH`.
 - **No `-p`:** `omni run -p "…"` is one-shot. It stops the whole run as soon as the Director's
   first turn ends, which kills the departments still working. Type the task in the interactive
   session instead and keep it open until the Director reports.
@@ -422,8 +427,8 @@ Checks:
 - Bright Data MCP reachable with your token:
   `curl -s -o /dev/null -w "%{http_code}\n" -X POST https://mcp.brightdata.com/mcp -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"check","version":"0"}}}'`
   prints `200`.
-- Agents got their tools, after starting a session:
-  `grep -o "mcp__brightdata[a-z_]*" "$(ls -t ~/.omnigent/logs/runner/* | head -1)" | sort -u`.
+- `read_paper` works from a clean environment like Omnigent's:
+  `env -i PATH="$PATH" HOME="$HOME" PYTHONPATH="$PWD" ~/.local/share/uv/tools/omnigent/bin/python3 -c "from lab.tools import read_paper; print(read_paper('https://arxiv.org/abs/2102.02965', 300))"`.
 - A run's output: `ls -R runs/<run_id>`.
 - Omnigent's own logs: `~/.omnigent/logs/` (`runner`, `server`, `host`, `cli`).
 
@@ -434,12 +439,14 @@ or code. Reference them as `${VAR}` in agent configs.
 
 Newest first.
 
-- **Literature specialist reads papers with Bright Data.** The smoke test (run `smoke01`) could
-  not verify any design because the specialist had no access to abstracts or full text. The
-  Bright Data MCP server is now declared in `literature_specialist/config.yaml` (token from
-  `${BRIGHTDATA_API_TOKEN}`, sent as an `Authorization` header). Its prompt allows only reading
-  the DOI or URL that `search_papers` returned, and warns that `offline_fallback` summaries are
-  not published abstracts.
+- **Literature specialist reads papers with `read_paper`.** The smoke test (run `smoke01`)
+  could not verify any design because the specialist had no access to abstracts or full text.
+  A first attempt declared the Bright Data MCP server in the specialist's config, but Omnigent
+  drops shell secrets from agent processes, so the token never arrived (`401 Invalid API Token
+  Format`, runs `smoke02` and `smoke03`). `read_paper` in `lab/tools.py` now calls Bright
+  Data's `scrape_as_markdown` itself, reads the token from `.env`, and only opens allowed
+  publisher pages, so the publisher rule is enforced in code. The prompt also warns that
+  `offline_fallback` summaries are not published abstracts.
 - **Tools that take a `dict` now accept fields.** In strict mode Omnigent made `write_record`'s
   `content` and `log_to_common_knowledge`'s `payload` reject every field; those wrappers now use
   `@tool(strict=False)`, checked by `tests/test_agent_tool_schemas.py`.
