@@ -1,7 +1,7 @@
 spec_version: 1
 name: literature
 description: >-
-  Known designs, benchmark numbers and citations.
+  Decides which published evidence the lab accepts for the research question.
 
 executor:
   type: omnigent
@@ -12,5 +12,7 @@ instructions: prompt.md
 
 tools:
   agents:
-    - literature_search
-    - literature_evidence
+    - literature_web_search
+    - literature_filter
+    - literature_processing
+    - literature_secretary

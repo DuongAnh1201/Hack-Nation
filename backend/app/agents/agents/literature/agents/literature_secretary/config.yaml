@@ -1,7 +1,7 @@
 spec_version: 1
-name: literature_search
+name: literature_secretary
 description: >-
-  Finds relevant papers and prior designs.
+  Logs the Literature Lead's accepted findings to the common knowledge base.
 
 executor:
   type: omnigent
