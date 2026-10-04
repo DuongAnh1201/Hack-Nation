@@ -18,6 +18,9 @@ dev = [
 [project.scripts]
 physics-lab = "physics_lab.cli:main"
 
+[tool.setuptools.packages.find]
+include = ["physics_lab*", "lab*", "bench*", "analysis*"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]

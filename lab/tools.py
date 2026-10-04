@@ -27,7 +27,8 @@ STANFORD_BENCHMARK_TARGET_W_M2 = 11.83
 # Strict list of verified legitimate academic sources
 ALLOWED_VENUES = ("Springer", "Nature", "IEEE", "arXiv")
 
-# Curated, verified offline citations for fallback and zero-hallucination guarantee
+# Offline fallback when OpenAlex is unreachable. Every entry's DOI was checked against
+# OpenAlex, and every entry must pass _is_legitimate_source like a live result.
 VERIFIED_PAPERS_DATABASE = [
     {
         "title": "Passive radiative cooling below ambient air temperature under direct sunlight",
@@ -56,45 +57,6 @@ VERIFIED_PAPERS_DATABASE = [
         ),
         "citations": 830,
     },
-    {
-        "title": "Sub-ambient radiative cooling to provide electricity-free refrigeration and air conditioning",
-        "authors": ["Eitan A. Goldstein", "Aaswath P. Raman", "Shanhui Fan"],
-        "year": 2017,
-        "venue": "Nature Energy",
-        "doi": "https://doi.org/10.1038/nenergy.2017.143",
-        "url": "https://www.nature.com/articles/nenergy.2017.143",
-        "abstract_excerpt": (
-            "Fluid cooling panels utilizing radiative sky cooling demonstrated continuously cooling flowing water "
-            "up to 5 C below ambient air temperature at peak solar irradiance exceeding 200 W/m2 cooling flux."
-        ),
-        "citations": 710,
-    },
-    {
-        "title": "Radiative Cooling of Solar Cells",
-        "authors": ["Linxiao Zhu", "Aaswath P. Raman", "Shanhui Fan"],
-        "year": 2015,
-        "venue": "IEEE Journal of Photovoltaics",
-        "doi": "https://doi.org/10.1109/JPHOTOV.2014.2374084",
-        "url": "https://doi.org/10.1109/JPHOTOV.2014.2374084",
-        "abstract_excerpt": (
-            "Analyzes photonic and microstructured thermal emitter designs on silicon solar cells to lower "
-            "operating temperature and boost efficiency via selective radiative heat dissipation."
-        ),
-        "citations": 320,
-    },
-    {
-        "title": "Photonic designs for radiative cooling",
-        "authors": ["Shanhui Fan", "Aaswath Raman"],
-        "year": 2019,
-        "venue": "Nature Nanotechnology",
-        "doi": "https://doi.org/10.1038/s41565-019-0462-0",
-        "url": "https://www.nature.com/articles/s41565-019-0462-0",
-        "abstract_excerpt": (
-            "Review of nanophotonic and thin-film multilayer engineering principles for subambient daytime radiative cooling, "
-            "contrasting selective emitters and broadband coolers under direct terrestrial solar irradiance."
-        ),
-        "citations": 490,
-    },
 ]
 
 
@@ -121,7 +83,9 @@ def search_academic_papers(query: str, limit: int = 5) -> list:
 
     Zero hallucination policy: results are queried live from OpenAlex or retrieved from
     verified academic indexes. Articles from unapproved sources are rejected.
-    Every result is stamped with origin: 'openalex' or 'offline_fallback'.
+
+    Every result has an ``origin``: ``"openalex"`` for a live result, ``"offline_fallback"``
+    for an entry from VERIFIED_PAPERS_DATABASE, so callers can tell them apart.
     """
     clean_query = query.strip()
     if not clean_query:
@@ -188,15 +152,12 @@ def search_academic_papers(query: str, limit: int = 5) -> list:
     if len(results) < limit:
         q_words = re.findall(r"\w+", clean_query.lower())
         for paper in VERIFIED_PAPERS_DATABASE:
-            # Strictly validate fallback against allowed venues
-            if not _is_legitimate_source("", paper.get("venue", ""), paper.get("doi", ""), paper.get("url", "")):
+            if not _is_legitimate_source("", paper["venue"], paper["doi"], paper["url"]):
                 continue
             p_text = f"{paper['title']} {paper['abstract_excerpt']}".lower()
             if any(w in p_text for w in q_words) or not q_words:
                 if not any(r.get("doi") == paper["doi"] for r in results):
-                    entry = dict(paper)
-                    entry["origin"] = "offline_fallback"
-                    results.append(entry)
+                    results.append({**paper, "origin": "offline_fallback"})
             if len(results) >= limit:
                 break
 
@@ -336,23 +297,31 @@ def optimize_thicknesses_tool(materials: list, substrate: str = "Ag", budget: in
     return res
 
 
+def _control_simulated() -> dict:
+    """The Stanford control's simulated metrics from results/control.json ({} if missing)."""
+    path = Path(__file__).resolve().parents[1] / "results" / "control.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("simulated", {})
+    except (OSError, ValueError):
+        return {}
+
+
 def compare_to_benchmark(
     p_net_w_m2: float,
     solar_reflectance: float | None = None,
     window_emissivity: float | None = None,
 ) -> dict:
-    """Compare cooling metrics against the Stanford 2014 benchmark in our simulator.
+    """Compare a design against the Stanford 2014 benchmark in our simulator (11.83 W/m2).
 
-    Benchmark control baseline from results/control.json:
-    - P_net: 11.83 W/m2
-    - Solar reflectance: 0.9770
-    - Window emissivity (8-13 um): 0.3857
+    Cooling power is always compared. Solar reflectance and 8-13 um window emissivity are
+    compared with the control's simulated values when given. Reports numbers only; the
+    Analysis department decides what they mean.
     """
     val = float(p_net_w_m2)
     delta = val - STANFORD_BENCHMARK_TARGET_W_M2
     beats = val >= STANFORD_BENCHMARK_TARGET_W_M2
     margin_pct = (delta / STANFORD_BENCHMARK_TARGET_W_M2) * 100.0
-    res = {
+    result = {
         "target_w_m2": STANFORD_BENCHMARK_TARGET_W_M2,
         "achieved_w_m2": round(val, 2),
         "delta_w_m2": round(delta, 2),
@@ -360,19 +329,17 @@ def compare_to_benchmark(
         "margin_percent": round(margin_pct, 1),
         "benchmark_design": "Stanford 7-layer HfO2/SiO2 on Ag (Nature 2014)",
     }
-    if solar_reflectance is not None:
-        sr = float(solar_reflectance)
-        control_sr = 0.9770
-        res["control_solar_reflectance"] = control_sr
-        res["achieved_solar_reflectance"] = round(sr, 4)
-        res["delta_solar_reflectance"] = round(sr - control_sr, 4)
-    if window_emissivity is not None:
-        we = float(window_emissivity)
-        control_we = 0.3857
-        res["control_window_emissivity"] = control_we
-        res["achieved_window_emissivity"] = round(we, 4)
-        res["delta_window_emissivity"] = round(we - control_we, 4)
-    return res
+    control = _control_simulated()
+    for key, value in (("solar_reflectance", solar_reflectance), ("window_emissivity", window_emissivity)):
+        if value is None:
+            continue
+        reference = control.get(key)
+        result[key] = {
+            "achieved": round(float(value), 4),
+            "control": None if reference is None else round(float(reference), 4),
+            "delta": None if reference is None else round(float(value) - float(reference), 4),
+        }
+    return result
 
 
 def budget_left(run_id: str = "default", max_budget: int = 2000) -> dict:
@@ -653,96 +620,59 @@ if __name__ == "__main__":
     }
 
 
-def run_experiment(
-    experiment_id: str,
-    run_id: str = "default",
-) -> dict:
-    """Run an agent-written experiment script in its dedicated folder (Issue #48).
+def run_experiment(experiment_id: str, run_id: str = "default", timeout_s: int = 600) -> dict:
+    """Run the agent-written experiment in runs/<run_id>/experiments/<experiment_id>/.
 
-    Folder: runs/<run_id>/experiments/<experiment_id>/
-    - Executes run.py in its folder
-    - Saves stdout and stderr to output.log
-    - Reads row count of results.csv
-    - Returns exit code, row count, and paths
-    - Does NOT write or alter run.py
+    The Experiment Runner specialist writes run.py itself; this tool only executes it with
+    the current Python, from inside the experiment folder, and saves everything it prints
+    to output.log next to it. It never writes or changes run.py.
+
+    Args:
+        experiment_id: Name of the experiment folder, e.g. "E3".
+        run_id: Identifier of the run directory under runs/.
+        timeout_s: Seconds before the script is stopped.
+
+    Returns:
+        Exit code, whether it timed out, the folder and file paths, and the number of
+        rows in results.csv (None when run.py did not write one).
     """
     import subprocess
     import sys
-    from pathlib import Path
 
-    exp_dir = Path("runs") / run_id / "experiments" / experiment_id
-    run_py = exp_dir / "run.py"
-    output_log = exp_dir / "output.log"
-    results_csv = exp_dir / "results.csv"
+    exp_dir = (Path("runs") / run_id / "experiments" / experiment_id).resolve()
+    script = exp_dir / "run.py"
+    if not script.is_file():
+        raise FileNotFoundError(f"No run.py in {exp_dir}; write the experiment code first.")
 
-    if not exp_dir.exists() or not run_py.exists():
-        return {
-            "exit_code": 1,
-            "row_count": 0,
-            "run_py_path": str(run_py),
-            "results_csv_path": str(results_csv) if results_csv.exists() else None,
-            "output_log_path": str(output_log),
-            "error": f"run.py not found in {exp_dir}",
-            "success": False,
-        }
-
-    try:
-        env = os.environ.copy()
-        repo_root = str(Path(__file__).resolve().parent.parent)
-        cur_pypath = env.get("PYTHONPATH", "")
-        env["PYTHONPATH"] = f"{repo_root}:{cur_pypath}" if cur_pypath else repo_root
-
-        proc = subprocess.run(
-            [sys.executable, "run.py"],
-            cwd=str(exp_dir.resolve()),
-            capture_output=True,
-            text=True,
-            timeout=120,
-            env=env,
-        )
-        combined_output = proc.stdout + ("\n" + proc.stderr if proc.stderr else "")
-        output_log.write_text(combined_output, encoding="utf-8")
-        exit_code = proc.returncode
-    except subprocess.TimeoutExpired as te:
-        output_log.write_text(f"Timeout after 120s:\n{te.stdout or ''}\n{te.stderr or ''}", encoding="utf-8")
-        return {
-            "exit_code": 124,
-            "row_count": 0,
-            "run_py_path": str(run_py),
-            "results_csv_path": str(results_csv) if results_csv.exists() else None,
-            "output_log_path": str(output_log),
-            "error": "Execution timed out",
-            "success": False,
-        }
-    except Exception as exc:
-        output_log.write_text(f"Execution error: {exc}", encoding="utf-8")
-        return {
-            "exit_code": 1,
-            "row_count": 0,
-            "run_py_path": str(run_py),
-            "results_csv_path": str(results_csv) if results_csv.exists() else None,
-            "output_log_path": str(output_log),
-            "error": str(exc),
-            "success": False,
-        }
-
-    row_count = 0
-    if results_csv.exists():
+    log_path = exp_dir / "output.log"
+    csv_path = exp_dir / "results.csv"
+    timed_out = False
+    with open(log_path, "w", encoding="utf-8") as log:
         try:
-            from lab.csv_helper import read_results_csv
-            rows = read_results_csv(str(results_csv))
-            row_count = len(rows)
-        except Exception:
-            with open(results_csv, "r", encoding="utf-8") as f:
-                row_count = max(0, sum(1 for line in f if line.strip()) - 1)
+            proc = subprocess.run(
+                [sys.executable, "run.py"],
+                cwd=exp_dir,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=timeout_s,
+                check=False,
+            )
+            exit_code = proc.returncode
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            exit_code = None
+            log.write(f"\n[run_experiment] stopped after {timeout_s} s\n")
 
+    rows = len(read_results_csv(csv_path)) if csv_path.is_file() else None
     return {
+        "experiment_id": experiment_id,
         "exit_code": exit_code,
-        "row_count": row_count,
-        "run_py_path": str(run_py),
-        "results_csv_path": str(results_csv) if results_csv.exists() else None,
-        "output_log_path": str(output_log),
-        "success": exit_code == 0,
+        "timed_out": timed_out,
+        "experiment_dir": str(exp_dir),
+        "script_path": str(script),
+        "results_csv": str(csv_path) if csv_path.is_file() else None,
+        "rows": rows,
+        "output_log": str(log_path),
     }
 
 
