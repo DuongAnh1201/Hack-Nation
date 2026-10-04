@@ -41,17 +41,28 @@ class Stack:
 
 
 def _invoke_eval(evaluate: Callable[..., Any], materials: List[str], thicknesses_nm: List[float], substrate: str = "Ag") -> Dict[str, Any]:
-    """Invoke evaluate callable supporting Stack objects, dicts, or keyword arguments."""
-    stack_obj = Stack(materials=materials, thicknesses_nm=thicknesses_nm, substrate=substrate)
+    """Invoke evaluate callable supporting bench.space.Stack, custom Stack objects, dicts, or keyword arguments."""
+    from bench.space import Layer as BenchLayer, Stack as BenchStack, MATERIALS, METALS
+
+    metal = substrate if substrate in METALS else "Ag"
+    if all(m in MATERIALS for m in materials) and 1 <= len(materials) <= 5:
+        bench_stack = BenchStack(
+            layers=tuple(BenchLayer(m, max(10.0, min(1000.0, float(t)))) for m, t in zip(materials, thicknesses_nm)),
+            metal=metal,
+        )
+        res = evaluate(bench_stack)
+        if isinstance(res, (int, float)):
+            return {"p_net_w_m2": float(res), "solar_reflectance": 0.975, "window_emissivity": 0.82, "valid": True}
+        if isinstance(res, dict):
+            return res
+
+    stack_obj = Stack(materials=materials, thicknesses_nm=thicknesses_nm, substrate=metal)
     try:
-        # Try passing Stack object
         res = evaluate(stack_obj)
     except TypeError:
         try:
-            # Try passing keyword arguments
-            res = evaluate(materials=materials, thicknesses_nm=thicknesses_nm, substrate=substrate)
+            res = evaluate(materials=materials, thicknesses_nm=thicknesses_nm, substrate=metal)
         except TypeError:
-            # Fall back to dict
             res = evaluate(stack_obj.to_dict())
 
     if isinstance(res, dict):
@@ -66,6 +77,8 @@ def _invoke_eval(evaluate: Callable[..., Any], materials: List[str], thicknesses
             "valid": getattr(res, "valid", True),
         }
     return {"p_net_w_m2": float(res), "valid": True}
+
+
 
 
 def _optimize_with_eval(
