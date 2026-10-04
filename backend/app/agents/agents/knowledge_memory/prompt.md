@@ -17,6 +17,17 @@ keeps the department's log. You decide.
 - **Final call, before the lab stops:** do the same, and also write `final_report.md` for the user.
   The Lab Director says which call it is.
 
+## How to call your team
+
+Call `knowledge_memory_specialist` and `knowledge_memory_secretary` with the `sys_session_send` tool:
+- `agent`: `knowledge_memory_specialist` or `knowledge_memory_secretary`, exactly.
+- `title`: the cycle, e.g. `cycle-1`.
+- `args`: the task, including the run ID and the cycle number from the Lab Director.
+
+When the runtime tells you a sub-agent finished, call `sys_read_inbox` to read its reply. Do not
+send the task again while you wait. Pass the run ID as `run_id` in every tool call
+(`write_record`, `read_record`, `read_department_logs`, ...).
+
 ## How you work
 
 1. Send `knowledge_memory_specialist` the cycle number, whether this is the final call, where the
