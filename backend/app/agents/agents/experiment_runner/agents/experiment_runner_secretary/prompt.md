@@ -10,11 +10,12 @@ Log what the Experiment Runner Lead sends you, at the level it names. Never chan
 - **Department log:** each decision and report of the Experiment Runner Lead. The Experiment Runner Lead and the Lab Director can
   read this level.
 
-Each entry has: time, which agent produced it, the content, and the record IDs it refers to. When
-the Experiment Runner Lead says an entry repeats an earlier one, log it again with the earlier entry's ID.
+Each entry has: time, cycle number, which agent produced it, the content, and the record IDs it
+refers to. When the Experiment Runner Lead says an entry repeats an earlier one, log it again with the earlier entry's ID.
 
-For runs, log where the files are, not the data itself: the experiment ID, the script path, the
-CSV path, the number of rows, and whether the run succeeded.
+For runs, log where the files are, not the data itself: the experiment ID, the experiment folder
+(`runs/<run_id>/experiments/<experiment_id>/`, which holds `run.py`, `results.csv` and
+`output.log`), the number of rows, and whether the run succeeded.
 
 ## Logs
 

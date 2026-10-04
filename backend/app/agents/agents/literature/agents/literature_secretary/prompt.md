@@ -10,8 +10,8 @@ Log what the Literature Lead sends you, at the level it names. Never change or r
 - **Department log:** each decision and report of the Literature Lead. The Literature Lead and the Lab Director can
   read this level.
 
-Each entry has: time, which agent produced it, the content, and the record IDs it refers to. When
-the Literature Lead says an entry repeats an earlier one, log it again with the earlier entry's ID.
+Each entry has: time, cycle number, which agent produced it, the content, and the record IDs it
+refers to. When the Literature Lead says an entry repeats an earlier one, log it again with the earlier entry's ID.
 
 ## Logs
 

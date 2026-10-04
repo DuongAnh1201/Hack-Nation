@@ -1,7 +1,7 @@
 spec_version: 1
 name: analysis
 description: >-
-  Decides whether a hypothesis is supported, refuted or inconclusive.
+  Decides whether this cycle's results support, refute or leave open the hypothesis tested.
 
 executor:
   type: omnigent
