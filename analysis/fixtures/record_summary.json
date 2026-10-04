@@ -1,0 +1,99 @@
+{
+  "errors": [],
+  "warnings": [],
+  "story": [
+    {
+      "check": "control passes before any design experiment",
+      "ok": true,
+      "detail": "control verdict V1"
+    },
+    {
+      "check": "planner chooses between 2+ candidate tests",
+      "ok": true,
+      "detail": "3 plans"
+    },
+    {
+      "check": "at least one hypothesis is refuted",
+      "ok": true,
+      "detail": "V2 refutes H2"
+    },
+    {
+      "check": "a refutation changes the next step",
+      "ok": true,
+      "detail": "H4 is based on V2, P3 is based on V2"
+    },
+    {
+      "check": "every verdict rests on a result",
+      "ok": true,
+      "detail": "3 verdicts"
+    },
+    {
+      "check": "a human approval decision is recorded",
+      "ok": true,
+      "detail": "A1: approved by human"
+    },
+    {
+      "check": "hypotheses, plans and verdicts cite their evidence",
+      "ok": true,
+      "detail": "all cite record ids"
+    }
+  ],
+  "summary": {
+    "fake": true,
+    "entries": 19,
+    "by_kind": {
+      "literature": 2,
+      "hypothesis": 4,
+      "plan": 3,
+      "experiment": 3,
+      "result": 3,
+      "verdict": 3,
+      "approval": 1
+    },
+    "by_agent": {
+      "literature_agent": 2,
+      "hypothesis_agent": 4,
+      "planner": 3,
+      "supervisor": 6,
+      "analyst": 3,
+      "safety": 1
+    },
+    "hypotheses": {
+      "H1": {
+        "claim": "Control: our simulator reproduces the Stanford design's 97% solar reflectance within 2 points",
+        "status": "supported",
+        "decided_by": "V1"
+      },
+      "H2": {
+        "claim": "A 5-layer TiO2/SiO2 stack reaches 55 W/m2: TiO2's high index makes a strong solar mirror",
+        "status": "refuted",
+        "decided_by": "V2"
+      },
+      "H3": {
+        "claim": "A 5-layer Al2O3/SiO2 stack reaches 55 W/m2: Al2O3 adds emission at 11-13 um",
+        "status": "proposed",
+        "decided_by": null
+      },
+      "H4": {
+        "claim": "4 layers of Si3N4/SiO2 on Ag reach 55 W/m2: Si3N4 emits at 10-12 um and SiO2 near 9 um, with little solar absorption",
+        "status": "supported",
+        "decided_by": "V3"
+      }
+    },
+    "best_design": {
+      "result": "R3",
+      "experiment": "E3",
+      "p_net_w_m2": 56.66,
+      "solar_reflectance": 0.978,
+      "materials": [
+        "Si3N4",
+        "SiO2",
+        "Si3N4",
+        "SiO2"
+      ],
+      "substrate": "Ag",
+      "n_layers": 4
+    },
+    "evaluations_total": 101
+  }
+}

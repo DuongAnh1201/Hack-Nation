@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" width="760" height="460" role="img" aria-labelledby="t d">
+<title id="t">Share of runs that reached the target vs simulator evaluations</title>
+<desc id="d">On the same simulator, search space and budget (2000 evaluations per run, 10 runs per method), the median number of evaluations needed to reach the target net cooling power of 55 W/m² (the Stanford design in our simulator) was: the agent lab 359 (9/10 runs reached it); random search &gt; 2000 (4/10 runs reached it); Bayesian optimization 878 (7/10 runs reached it); the ablation without analyst feedback 943 (6/10 runs reached it). The agent lab needed about 5.6× fewer evaluations than random search (95% CI 4.0×–7.0×); we claim at least 4.0×. Random search reached the target in fewer than half of its runs, so its median is capped at the budget of 2000 and the true speed-up is larger. The agent lab needed about 2.4× fewer evaluations than Bayesian optimization (95% CI 1.4×–6.0×); we claim at least 1.4×. The agent lab needed about 2.6× fewer evaluations than the ablation without analyst feedback (95% CI 1.8×–7.0×); we claim at least 1.8×. Failed runs are included in every number.</desc>
+<rect width="760" height="460" fill="#fcfcfb"/>
+<text x="64" y="30" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="16" font-weight="600" fill="#0b0b0b">Share of runs that reached the target cooling power</text>
+<text x="64" y="50" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">target 55 W/m² (Stanford design in our simulator) · budget 2,000 evaluations · 10 runs per method</text>
+<text x="64" y="68" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Dots mark each method's median (where its line crosses 50%). Failed runs keep a line below 100%.</text>
+<rect x="546" y="14" width="200" height="24" rx="4" fill="#d03b3b"/><text x="646" y="31" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">⚠ FAKE DATA · do not cite</text>
+<line x1="64" y1="94" x2="82" y2="94" stroke="#2a78d6" stroke-width="2.5" stroke-linecap="round"/>
+<text x="88" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Agent lab</text>
+<line x1="169.4" y1="94" x2="187.4" y2="94" stroke="#1baf7a" stroke-width="2.5" stroke-linecap="round"/>
+<text x="193.4" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Random search</text>
+<line x1="301.20000000000005" y1="94" x2="319.20000000000005" y2="94" stroke="#eb6834" stroke-width="2.5" stroke-linecap="round"/>
+<text x="325.20000000000005" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Bayesian optimization</text>
+<line x1="64" y1="114" x2="82" y2="114" stroke="#eda100" stroke-width="2.5" stroke-linecap="round"/>
+<text x="88" y="118" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Agent lab, no analyst feedback (ablation)</text>
+<line x1="64" y1="402.0" x2="570" y2="402.0" stroke="#c3c2b7" stroke-width="1"/>
+<text x="56" y="406.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="end">0%</text>
+<line x1="64" y1="336.5" x2="570" y2="336.5" stroke="#e1e0d9" stroke-width="1"/>
+<text x="56" y="340.5" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="end">25%</text>
+<line x1="64" y1="271.0" x2="570" y2="271.0" stroke="#e1e0d9" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="56" y="275.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="end">50%</text>
+<line x1="64" y1="205.5" x2="570" y2="205.5" stroke="#e1e0d9" stroke-width="1"/>
+<text x="56" y="209.5" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="end">75%</text>
+<line x1="64" y1="140.0" x2="570" y2="140.0" stroke="#e1e0d9" stroke-width="1"/>
+<text x="56" y="144.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="end">100%</text>
+<line x1="64.0" y1="402" x2="64.0" y2="406" stroke="#c3c2b7"/>
+<text x="64.0" y="420" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="middle">0</text>
+<line x1="190.5" y1="402" x2="190.5" y2="406" stroke="#c3c2b7"/>
+<text x="190.5" y="420" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="middle">500</text>
+<line x1="317.0" y1="402" x2="317.0" y2="406" stroke="#c3c2b7"/>
+<text x="317.0" y="420" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="middle">1,000</text>
+<line x1="443.5" y1="402" x2="443.5" y2="406" stroke="#c3c2b7"/>
+<text x="443.5" y="420" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="middle">1,500</text>
+<line x1="570.0" y1="402" x2="570.0" y2="406" stroke="#c3c2b7"/>
+<text x="570.0" y="420" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="middle">2,000</text>
+<text x="317.0" y="446" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">Simulator evaluations used</text>
+<text transform="translate(16 271.0) rotate(-90)" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">Runs that reached the target</text>
+<path d="M64.0,402.0 H218.6 V375.8 H224.1 V349.6 H248.9 V323.4 H255.8 V297.2 H302.6 V271.0 H324.1 V244.8 H570.0 V244.8" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H218.6 V375.8 H224.1 V349.6 H248.9 V323.4 H255.8 V297.2 H302.6 V271.0 H324.1 V244.8 H570.0 V244.8" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64.0,402.0 H173.0 V375.8 H205.4 V349.6 H210.0 V323.4 H276.5 V297.2 H286.1 V271.0 H478.4 V244.8 H497.4 V218.6 H570.0 V218.6" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H173.0 V375.8 H205.4 V349.6 H210.0 V323.4 H276.5 V297.2 H286.1 V271.0 H478.4 V244.8 H497.4 V218.6 H570.0 V218.6" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64.0,402.0 H310.7 V375.8 H423.8 V349.6 H490.3 V323.4 H563.4 V297.2 H570.0 V297.2" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H310.7 V375.8 H423.8 V349.6 H490.3 V323.4 H563.4 V297.2 H570.0 V297.2" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64.0,402.0 H119.7 V375.8 H135.1 V349.6 H135.9 V323.4 H149.5 V297.2 H154.8 V271.0 H159.1 V244.8 H165.5 V218.6 H170.0 V192.4 H253.2 V166.2 H570.0 V166.2" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H119.7 V375.8 H135.1 V349.6 H135.9 V323.4 H149.5 V297.2 H154.8 V271.0 H159.1 V244.8 H165.5 V218.6 H170.0 V192.4 H253.2 V166.2 H570.0 V166.2" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="302.6" cy="271.0" r="5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"><title>Agent lab, no analyst feedback (ablation): median 943 evaluations</title></circle>
+<circle cx="286.1" cy="271.0" r="5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Bayesian optimization: median 878 evaluations</title></circle>
+<circle cx="154.8" cy="271.0" r="5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Agent lab: median 359 evaluations</title></circle>
+<line x1="580" y1="166.2" x2="592" y2="166.2" stroke="#2a78d6" stroke-width="2.5" stroke-linecap="round"/>
+<text x="598" y="170.2" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Agent lab</text>
+<text x="598" y="184.2" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">9/10 reached · median 359</text>
+<line x1="580" y1="218.6" x2="592" y2="218.6" stroke="#eb6834" stroke-width="2.5" stroke-linecap="round"/>
+<text x="598" y="222.6" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Bayesian opt.</text>
+<text x="598" y="236.6" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">7/10 reached · median 878</text>
+<line x1="580" y1="248.6" x2="592" y2="248.6" stroke="#eda100" stroke-width="2.5" stroke-linecap="round"/>
+<text x="598" y="252.6" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Ablation</text>
+<text x="598" y="266.6" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">6/10 reached · median 943</text>
+<line x1="580" y1="297.2" x2="592" y2="297.2" stroke="#1baf7a" stroke-width="2.5" stroke-linecap="round"/>
+<text x="598" y="301.2" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Random search</text>
+<text x="598" y="315.2" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">4/10 reached · median > 2000</text>
+</svg>
