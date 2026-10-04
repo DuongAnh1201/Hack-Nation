@@ -8,14 +8,15 @@ import { Bloom, EffectComposer } from "@react-three/postprocessing";
 import { Component, type ReactNode, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { materialInfo } from "../lib/materials";
+import { Photons, SkyLayer } from "./Photons";
 
 export interface Stack { materials: string[]; thicknessesNm: number[]; substrate: string }
-type Mood = "neutral" | "refuted" | "supported";
+export type Mood = "neutral" | "refuted" | "supported";
 
 const W = 2.8, D = 2.0, MIRROR = 0.16, GAP = 0.06;
 const layerH = (nm: number) => 0.1 + 0.5 * Math.sqrt(Math.max(nm, 1) / 800);
 
-function layout(s: Stack) {
+export function layout(s: Stack) {
   let y = MIRROR + GAP;
   return s.materials.map((m, i) => {
     const h = layerH(s.thicknessesNm[i] ?? 100);
@@ -24,7 +25,7 @@ function layout(s: Stack) {
     return out;
   });
 }
-const topOf = (s: Stack) => layout(s).reduce((t, l) => Math.max(t, l.y + l.h / 2), MIRROR);
+export const topOf = (s: Stack) => layout(s).reduce((t, l) => Math.max(t, l.y + l.h / 2), MIRROR);
 
 const MOOD = { neutral: new THREE.Color("#000000"), refuted: new THREE.Color("#ff2d4a"), supported: new THREE.Color("#19d38a") };
 const tmp = new THREE.Color();
@@ -49,7 +50,7 @@ function Layer({ y, h, color, ghost, mood, animate }: { y: number; h: number; co
   );
 }
 
-function StackMesh({ stack, x, ghost, mood, animate }: { stack: Stack; x: number; ghost: boolean; mood: Mood; animate: boolean }) {
+export function StackMesh({ stack, x, ghost, mood, animate }: { stack: Stack; x: number; ghost: boolean; mood: Mood; animate: boolean }) {
   const layers = layout(stack);
   return (
     <group position={[x, 0, 0]}>
@@ -104,8 +105,9 @@ function HeatWaves({ x, top, animate }: { x: number; top: number; animate: boole
   );
 }
 
-export function CoatingScene({ stack, reference, compare, mood, animate }: {
+export function CoatingScene({ stack, reference, compare, mood, animate, photons }: {
   stack?: Stack; reference?: Stack; compare: boolean; mood: Mood; animate: boolean;
+  photons?: { reflectance: number; emissivity: number };
 }) {
   const showRef = compare && reference;
   const x = showRef ? 1.9 : 0;
@@ -113,8 +115,8 @@ export function CoatingScene({ stack, reference, compare, mood, animate }: {
   return (
     <SceneBoundary>
       <Canvas camera={{ position: [5.8, 3.9, 7.4], fov: 38 }} dpr={[1, 2]} gl={{ antialias: true }}>
-        <color attach="background" args={["#04060c"]} />
-        <fog attach="fog" args={["#04060c", 14, 30]} />
+        <color attach="background" args={["#0b0a08"]} />
+        <fog attach="fog" args={["#0b0a08", 14, 30]} />
         <ambientLight intensity={0.35} />
         <directionalLight position={[-5, 9, 4]} intensity={1.6} color="#ffd9a3" />
         <pointLight position={[4, 3, 4]} intensity={18} color="#5ad1ff" />
@@ -128,8 +130,17 @@ export function CoatingScene({ stack, reference, compare, mood, animate }: {
         {stack && (
           <>
             <StackMesh stack={stack} x={x} ghost={false} mood={mood} animate={animate} />
-            <SunRays x={x} top={top} animate={animate} />
-            <HeatWaves x={x} top={top} animate={animate} />
+            {photons ? (
+              <>
+                <Photons x={x} top={top} reflectance={photons.reflectance} emissivity={photons.emissivity} animate={animate} />
+                <SkyLayer y={4.2} />
+              </>
+            ) : (
+              <>
+                <SunRays x={x} top={top} animate={animate} />
+                <HeatWaves x={x} top={top} animate={animate} />
+              </>
+            )}
           </>
         )}
         <OrbitControls target={[0, 1.1, 0]} enablePan={false} minDistance={6} maxDistance={16}

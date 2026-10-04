@@ -20,3 +20,6 @@ def health() -> dict[str, str]:
 
 
 # Routers from app/api/ get registered here.
+from app.api.lab import router as lab_router  # noqa: E402
+
+app.include_router(lab_router)
