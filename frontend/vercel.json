@@ -2,5 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://physics-study-api-7twp.onrender.com/api/:match*"
+    }
+  ]
 }
