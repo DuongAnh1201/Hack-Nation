@@ -1,0 +1,11 @@
+spec_version: 1
+name: literature_processing
+description: >-
+  Extracts claims, numbers and conditions from the kept articles.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md

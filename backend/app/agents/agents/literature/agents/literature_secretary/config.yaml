@@ -1,0 +1,11 @@
+spec_version: 1
+name: literature_secretary
+description: >-
+  Logs the Literature Lead's accepted findings to the common knowledge base.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md

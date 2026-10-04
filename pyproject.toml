@@ -7,7 +7,7 @@ name = "physics_lab"
 version = "0.1.0"
 description = "AI-run laboratory for the Agentic Scientific Discovery challenge"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = []
 
 [project.optional-dependencies]

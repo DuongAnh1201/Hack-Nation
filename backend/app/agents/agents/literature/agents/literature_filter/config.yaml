@@ -1,0 +1,11 @@
+spec_version: 1
+name: literature_filter
+description: >-
+  Keeps only the articles that match the problem statement.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
