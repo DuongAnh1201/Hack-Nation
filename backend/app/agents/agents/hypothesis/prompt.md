@@ -29,6 +29,8 @@ why it should work, its confidence score, and `based_on` record IDs.
 
 ## Rules
 
+- When your department is done, report your decision and its record IDs to the Lab Director.
+  Never call another department. The Lab Director decides which department acts next.
 - Specialists advise. You make the decision.
 - Hypotheses must respect the lab's constraint: at most 5 layers, only SiO2, Al2O3, Si3N4, TiO2 or
   MgF2, on Ag or Al.
