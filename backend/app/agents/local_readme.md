@@ -343,7 +343,9 @@ are deterministic tools implemented in [lab/tools.py](../../../lab/tools.py).
 
 Omnigent finds local tools in `tools/python/*.py` inside each agent's folder, which is also how tool
 permissions are enforced:
-- **Specialists** carry domain tools: `literature_specialist` uses `search_papers`;
+- **Specialists** carry domain tools: `literature_specialist` uses `search_papers`, plus the
+  Bright Data MCP server (`scrape_as_markdown`, `scrape_batch`) to read the pages of papers that
+  `search_papers` found, never to search the web;
   `hypothesis_specialist` uses `list_materials` and `material_properties`;
   `experiment_runner_specialist` uses `simulate_stack`, `optimize_thicknesses` and
   `run_experiment`; `analysis_specialist` uses `compare_to_benchmark`.
@@ -391,21 +393,58 @@ uv pip install -e .
 folder, which the agents' `run.py` and `merge.py` need. `pyproject.toml` lists those packages
 explicitly; without that, setuptools stops with "Multiple top-level packages discovered".
 
-Omnigent:
+Omnigent, from the repo root:
 
 ```bash
-omni config list                     # check the Claude credential (subscription or API key)
-omni start                           # local server and web UI
-omni run backend/app/agents          # start the Lab Director
+source .venv/bin/activate
+set -a; source .env; set +a
+export PYTHONPATH="$PWD"
+omni stop
+omni start
+omni run backend/app/agents
 ```
 
-Start Omnigent from a terminal where `.venv` is active, so the agents' `python` is the same one.
+Then type the task at the prompt, starting with a run ID, e.g. `Run ID: smoke01. Cycle 1 only. …`.
+
+Why each step matters:
+- **`PYTHONPATH`:** Omnigent runs agent tools with its own Python, not `.venv`. Without the repo
+  root on `PYTHONPATH`, every lab tool fails with `No module named 'lab'`.
+- **`source .env` before `omni start`:** agent configs read secrets such as
+  `${BRIGHTDATA_API_TOKEN}` from the environment the Omnigent server was started from. The server
+  keeps running in the background, so restart it (`omni stop`, `omni start`) after changing
+  `.env` or `PYTHONPATH`.
+- **No `-p`:** `omni run -p "…"` is one-shot. It stops the whole run as soon as the Director's
+  first turn ends, which kills the departments still working. Type the task in the interactive
+  session instead and keep it open until the Director reports.
+- `omni config list` shows the Claude credential; `omni usage` shows the cost of runs.
+
+Checks:
+- Bright Data MCP reachable with your token:
+  `curl -s -o /dev/null -w "%{http_code}\n" -X POST https://mcp.brightdata.com/mcp -H "Authorization: Bearer $BRIGHTDATA_API_TOKEN" -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"check","version":"0"}}}'`
+  prints `200`.
+- Agents got their tools, after starting a session:
+  `grep -o "mcp__brightdata[a-z_]*" "$(ls -t ~/.omnigent/logs/runner/* | head -1)" | sort -u`.
+- A run's output: `ls -R runs/<run_id>`.
+- Omnigent's own logs: `~/.omnigent/logs/` (`runner`, `server`, `host`, `cli`).
+
 Keep secrets (`ANTHROPIC_API_KEY`, `BRIGHTDATA_API_TOKEN`, …) in `.env`, never in issues, configs
 or code. Reference them as `${VAR}` in agent configs.
 
 ## Change log
 
 Newest first.
+
+- **Literature specialist reads papers with Bright Data.** The smoke test (run `smoke01`) could
+  not verify any design because the specialist had no access to abstracts or full text. The
+  Bright Data MCP server is now declared in `literature_specialist/config.yaml` (token from
+  `${BRIGHTDATA_API_TOKEN}`, sent as an `Authorization` header). Its prompt allows only reading
+  the DOI or URL that `search_papers` returned, and warns that `offline_fallback` summaries are
+  not published abstracts.
+- **Tools that take a `dict` now accept fields.** In strict mode Omnigent made `write_record`'s
+  `content` and `log_to_common_knowledge`'s `payload` reject every field; those wrappers now use
+  `@tool(strict=False)`, checked by `tests/test_agent_tool_schemas.py`.
+- **Prompts say how to call sub-agents and pass the run ID.** Sub-agents are called with
+  `sys_session_send` (`agent` = folder name), and replies come back through `sys_read_inbox`.
 
 - **One Common Knowledge per run.** `runs/<run_id>/common_knowledge.json` replaces the single
   `runs/common_knowledge.json` shared by all runs. A run is one whole research project across all
