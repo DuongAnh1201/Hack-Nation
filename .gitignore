@@ -7,4 +7,5 @@ __pycache__/
 runs/
 node_modules/
 dist/
+*.egg-info/
 .DS_Store

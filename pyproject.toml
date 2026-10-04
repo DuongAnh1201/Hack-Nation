@@ -21,3 +21,7 @@ physics-lab = "physics_lab.cli:main"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lab*", "bench*", "physics_lab*", "analysis*"]
