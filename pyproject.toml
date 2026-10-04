@@ -19,6 +19,7 @@ dev = [
 physics-lab = "physics_lab.cli:main"
 
 [tool.setuptools.packages.find]
+where = ["."]
 include = ["physics_lab*", "lab*", "bench*", "analysis*"]
 
 [tool.pytest.ini_options]

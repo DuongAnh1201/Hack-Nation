@@ -271,6 +271,10 @@ def test_search_papers_alias():
     assert tools.search_papers is tools.search_academic_papers
     res = tools.search_papers("radiative cooling", limit=1)
     assert len(res) == 1
+    assert "origin" in res[0]
+    assert res[0]["origin"] in ("openalex", "offline_fallback")
+
+
 
 
 
