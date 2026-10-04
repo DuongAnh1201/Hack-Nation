@@ -1,7 +1,7 @@
 spec_version: 1
-name: hypothesis_physics
+name: hypothesis_confidence
 description: >-
-  Argues from optics and radiative physics why a stack should work.
+  Scores confidence in hypotheses and proposes new candidates from the evidence.
 
 executor:
   type: omnigent

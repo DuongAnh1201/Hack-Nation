@@ -9,17 +9,56 @@ Do not add a LangChain, LangGraph or Python loop that decides for the agents.
 ```
 radiative-cooling-lab (Lab Director / Supervisor)
 |
-+-- literature          Literature Lead        -> literature_search, literature_evidence
-+-- hypothesis          Hypothesis Lead        -> hypothesis_physics, hypothesis_materials
-+-- planning            Planning Lead          -> planning_exploration, planning_budget
-+-- analysis            Analysis Lead          -> analysis_performance, analysis_failure
-+-- review_safety       Review Lead            -> review_evidence_auditor, review_safety_approval
-+-- knowledge_memory    Knowledge Lead         -> knowledge_archivist, knowledge_curator, knowledge_synthesizer
++-- literature          Literature Lead        -> literature_web_search, literature_filter,
+|                                                literature_processing, literature_secretary
++-- hypothesis          Hypothesis Lead        -> hypothesis_review, hypothesis_confidence,
+|                                                hypothesis_secretary
++-- planning            Planning Lead          -> planning_exploration, planning_budget          (placeholder)
++-- analysis            Analysis Lead          -> analysis_performance, analysis_failure         (placeholder)
++-- review_safety       Review Lead            -> review_evidence_auditor, review_safety_approval (placeholder)
++-- knowledge_memory    Knowledge Lead         -> knowledge_archivist, knowledge_curator,       (placeholder)
+                                                  knowledge_synthesizer
 ```
 
-1 Lab Director, 6 Department Leads, 13 specialists. The Director only talks to Leads, and each Lead
-only talks to its own specialists. Knowledge & Memory turns the other departments' results into
-common knowledge for the next reasoning cycle.
+The Director only talks to Leads, and each Lead only talks to its own specialists. Knowledge &
+Memory turns the other departments' results into common knowledge for the next reasoning cycle.
+Departments marked placeholder still have their first-draft specialists and empty prompts.
+
+## Decision ownership
+
+- **Specialists** investigate and advise. They return findings to their Lead and do not write
+  decisions to the research record.
+- **Department Leads** make their department's decision, write it to the record, and report to the
+  Director.
+- **The Lab Director** decides which department acts next and when the research stops. It does not
+  make the departments' scientific decisions.
+- **Department secretaries** log the Lead's decision to the common knowledge base. They record
+  decisions and never change them.
+
+## Defined departments
+
+**Literature:** decides which published evidence the lab accepts.
+
+1. `literature_web_search` finds candidate articles, only from Springer, Nature, IEEE and arXiv.
+2. `literature_filter` keeps the articles that match the problem statement.
+3. `literature_processing` extracts claims, numbers with units, and conditions.
+4. The Lead accepts or rejects findings and writes `literature` records.
+5. `literature_secretary` logs the decision to the common knowledge base.
+6. The Lead reports to the Director, who hands the findings to Hypothesis.
+
+**Hypothesis:** decides which hypothesis the lab tests next.
+
+1. `hypothesis_review` checks earlier hypotheses against the new literature: consistent,
+   conflicting or no bearing.
+2. `hypothesis_confidence` scores each hypothesis from 0 to 1 and proposes new candidates.
+3. The Lead keeps, revises or replaces hypotheses and writes `hypothesis` records (status
+   `proposed`).
+4. `hypothesis_secretary` logs the decision to the common knowledge base.
+
+Open questions:
+- The common knowledge base format is not defined yet. Until it is, the secretaries return their
+  log entries to the Lead as text.
+- The per-department secretaries overlap with the Knowledge & Memory department's Archivist.
 
 ## Folder layout
 
@@ -34,7 +73,7 @@ agents/                      <- this folder is the Lab Director's bundle
       config.yaml            which specialists it may call
       prompt.md
       agents/
-        literature_search/   Specialist (no sub-agents)
+        literature_web_search/   Specialist (no sub-agents)
           config.yaml
           prompt.md
 ```
@@ -68,7 +107,7 @@ We bring the hierarchy up one department at a time, and only after nested delega
 The folder stays and can be turned back on later.
 
 **Add a specialist:**
-1. Copy any specialist folder, e.g. `agents/literature/agents/literature_search/`, to a new folder
+1. Copy any specialist folder, e.g. `agents/literature/agents/literature_filter/`, to a new folder
    name in the same department.
 2. Set `name:` and `description:` in the copy's `config.yaml`, and rewrite its `prompt.md`.
 3. Add the folder name to the Lead's `tools.agents`.
