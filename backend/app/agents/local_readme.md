@@ -13,13 +13,14 @@ radiative-cooling-lab (Lab Director / Supervisor)
 |
 +-- literature          Literature Lead  -> literature_specialist,       literature_secretary
 +-- hypothesis          Hypothesis Lead  -> hypothesis_specialist,       hypothesis_secretary
-+-- planning            Planning Lead    -> planning_specialist,         planning_secretary          (placeholder)
++-- planning            Planning Lead    -> planning_specialist,         planning_secretary
++-- experiment_runner   Runner Lead      -> experiment_runner_specialist, experiment_runner_secretary
 +-- analysis            Analysis Lead    -> analysis_specialist,         analysis_secretary          (placeholder)
 +-- review_safety       Review Lead      -> review_safety_specialist,    review_safety_secretary     (placeholder)
 +-- knowledge_memory    Knowledge Lead   -> knowledge_memory_specialist, knowledge_memory_secretary  (placeholder)
 ```
 
-1 Lab Director, 6 Leads, 6 specialists, 6 secretaries. The Director only talks to Leads, and each
+1 Lab Director, 7 Leads, 7 specialists, 7 secretaries. The Director only talks to Leads, and each
 Lead only talks to its own specialist and secretary. Placeholder departments have their decision
 defined but not their details.
 
@@ -35,6 +36,9 @@ defined but not their details.
   make the departments' scientific decisions.
 - **Every Lead reports back to the Director** when its department finishes: the decision and its
   record IDs. Leads never call another department, so every handoff goes through the Director.
+- **Only the Director talks to the user.** When a Lead needs a human (e.g. a plan the agents cannot
+  run), it puts a message for the user in its report, and the Director sends it and passes the
+  answer back.
 
 ## Log permissions
 
@@ -88,7 +92,37 @@ calls it again only if something changed elsewhere in the lab; otherwise it move
 3. `hypothesis_secretary` logs the specialist's result and the Lead's decision.
 4. The Lead reports to the Director.
 
+**Planning:** decides which experiment tests the hypothesis, why, and who can run it.
+
+1. `planning_specialist` reasons from what the hypothesis predicts, to the measurement that would
+   confirm or refute it, to the kind of experiment that produces it. It proposes at least 2
+   candidates, each with why, expected gain, cost in simulator evaluations, steps, feasibility and
+   cited sources.
+2. If the methodology lacks literature support, the Lead reports the gap to the Director, who
+   decides whether Literature collects more first.
+3. The Lead picks one experiment and decides whether the agents can script and run it with the
+   lab's tools. It writes a `plan` record with `runnable_by: agents` or `runnable_by: human`; for
+   `human` it adds a message for the user, which the Director sends.
+4. `planning_secretary` logs the specialist's result and the Lead's decision.
+
+**Experiment Runner:** decides whether a run went as planned and its data is accepted.
+
+1. `experiment_runner_specialist` writes the script (listing its inputs, tools, packages and
+   outputs), runs it, and saves one CSV row per simulation, keeping failed designs.
+2. The Lead checks that the run followed the plan, finished, and produced a complete CSV, then
+   writes `experiment` and `result` records. It runs only plans marked `runnable_by: agents`.
+3. `experiment_runner_secretary` logs where the files are (experiment ID, script path, CSV path,
+   row count, status), not the data itself.
+4. The Lead reports to the Director. Whether the result supports the hypothesis is Analysis's
+   decision.
+
+Files from runs:
+- Scripts: `runs/<run_id>/scripts/<experiment_id>.py`
+- Data: `runs/<run_id>/data/<experiment_id>.csv`
+
 Open questions:
+- The Experiment Runner specialist runs code it writes itself. Give it a sandbox in its
+  `config.yaml` (`os_env.sandbox`: write only to `runs/`, no network) before enabling it.
 - The lab log database and its tools are not built yet. Until they are, the secretaries return
   their log entries to the Lead as text.
 - How the lab log relates to common knowledge: the Knowledge & Memory department needs to read the
@@ -131,7 +165,7 @@ We bring the hierarchy up one department at a time, and only after nested delega
 | Step | Wired | Check |
 |---|---|---|
 | 1 | Director -> `literature` -> its specialist and secretary | The Lead's report reaches the Director in the Omnigent web session |
-| 2 | + `hypothesis`, `planning`, `analysis` | One full loop with a refuted hypothesis |
+| 2 | + `hypothesis`, `planning`, `experiment_runner`, `analysis` | One full loop with a refuted hypothesis |
 | 3 | + `review_safety` | Fabrication proposals ask a human |
 | 4 | + `knowledge_memory` | Next cycle reads common knowledge |
 
