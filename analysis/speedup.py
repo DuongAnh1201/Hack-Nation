@@ -344,7 +344,7 @@ def measured_improvement(r: dict[str, Any]) -> str:
         parts.append(f"{phrase(name)} {med} ({m['reached']}/{m['runs']} runs reached it)")
     text = (f"On the same simulator, search space and budget ({r['budget']} evaluations per run, "
             f"{f['runs']} runs per method), the median number of evaluations needed to reach the target "
-            f"net cooling power of {r['target_w_m2']:g} W/m² (the Stanford design in our simulator) was: "
+            f"net cooling power of {r['target_w_m2']:g} W/m² (benchmark target) was: "
             + "; ".join(parts) + ". ")
     text += " ".join(s["claim"] for s in r["speedups"])
     return text + " Failed runs are included in every number."
@@ -410,7 +410,7 @@ def render_svg(r: dict[str, Any]) -> str:
            f'<rect width="{W}" height="{H}" fill="{surface}"/>']
     title = "Share of runs that reached the target cooling power"
     out.append(f'<text x="{left}" y="30" {font} font-size="16" font-weight="600" fill="{ink}">{_esc(title)}</text>')
-    sub = (f"target {r['target_w_m2']:g} W/m² (Stanford design in our simulator) · budget {budget:,} evaluations · "
+    sub = (f"benchmark target {r['target_w_m2']:g} W/m² · budget {budget:,} evaluations · "
            f"{r['methods'][r['focus']]['runs']} runs per method")
     sub2 = "Dots mark each method's median (where its line crosses 50%). Failed runs keep a line below 100%."
     out.append(f'<text x="{left}" y="50" {font} font-size="12" fill="{ink2}">{_esc(sub)}</text>')

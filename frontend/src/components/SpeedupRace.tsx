@@ -111,7 +111,7 @@ export function SpeedupRace({ speedup }: { speedup: Speedup }) {
             <g clipPath="url(#race-clip)">
               {[...order].reverse().map((n) => (
                 <g key={n}>
-                  <path d={stepPath(speedup.curves[n], xs, ys)} fill="none" stroke="#04060c" strokeWidth={6} />
+                  <path d={stepPath(speedup.curves[n], xs, ys)} fill="none" stroke="#0b0a08" strokeWidth={6} />
                   <path d={stepPath(speedup.curves[n], xs, ys)} fill="none" stroke={colors[n]} strokeWidth={n === speedup.focus ? 3 : 2}
                         strokeLinejoin="round" style={n === speedup.focus ? { filter: `drop-shadow(0 0 6px ${colors[n]})` } : undefined} />
                 </g>
@@ -120,7 +120,7 @@ export function SpeedupRace({ speedup }: { speedup: Speedup }) {
             {order.map((n) => {
               const m = speedup.methods[n];
               if (m.median_censored || m.median_evals === null || m.median_evals > xNow) return null;
-              return <circle key={n} cx={xs(m.median_evals)} cy={ys(0.5)} r={5} fill={colors[n]} stroke="#04060c" strokeWidth={2} />;
+              return <circle key={n} cx={xs(m.median_evals)} cy={ys(0.5)} r={5} fill={colors[n]} stroke="#0b0a08" strokeWidth={2} />;
             })}
             {p < 1 && <line x1={xs(xNow)} x2={xs(xNow)} y1={MT} y2={MT + PH} stroke="rgba(255,255,255,0.25)" />}
             {p >= 1 && ends.map(({ n, y }) => {

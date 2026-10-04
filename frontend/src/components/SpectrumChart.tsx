@@ -36,8 +36,9 @@ function useMorph(target: number[] | undefined, ms = 750): number[] | undefined 
   return shown;
 }
 
-export function SpectrumChart({ spectra, currentId, referenceId }: {
+export function SpectrumChart({ spectra, currentId, referenceId, extras = [] }: {
   spectra: Spectra; currentId?: string; referenceId?: string;
+  extras?: { id: string; color: string }[];   // pinned designs drawn as thin comparison lines
 }) {
   const lam = spectra.wavelength_um;
   const cur = currentId ? spectra.designs[currentId] : undefined;
@@ -51,8 +52,10 @@ export function SpectrumChart({ spectra, currentId, referenceId }: {
   const series = useMemo(() => [
     { key: "ideal", label: "Ideal cooler", color: "rgba(232,238,252,0.35)", dash: "2 4", v: spectra.ideal },
     ...(ref ? [{ key: "ref", label: ref.label, color: "#c6d0e5", dash: "6 5", v: ref.emissivity }] : []),
+    ...extras.filter((x) => spectra.designs[x.id]).map((x) => ({
+      key: `x-${x.id}`, label: spectra.designs[x.id].label, color: x.color, dash: "4 3", v: spectra.designs[x.id].emissivity })),
     ...(cur && curShown ? [{ key: "cur", label: cur.label, color: "#5ad1ff", dash: undefined, v: curShown }] : []),
-  ], [spectra.ideal, ref, cur, curShown]);
+  ], [spectra.ideal, spectra.designs, ref, cur, curShown, extras]);
 
   const onMove = (ev: MouseEvent) => {
     const r = svg.current!.getBoundingClientRect();
@@ -108,7 +111,7 @@ export function SpectrumChart({ spectra, currentId, referenceId }: {
         {hover !== null && (
           <g pointerEvents="none">
             <line x1={xs(lam[hover])} x2={xs(lam[hover])} y1={MT} y2={MT + PH} stroke="rgba(232,238,252,0.35)" />
-            {series.map((s) => <circle key={s.key} cx={xs(lam[hover])} cy={ys(s.v[hover])} r={4} fill={s.color} stroke="#04060c" strokeWidth={2} />)}
+            {series.map((s) => <circle key={s.key} cx={xs(lam[hover])} cy={ys(s.v[hover])} r={4} fill={s.color} stroke="#0b0a08" strokeWidth={2} />)}
           </g>
         )}
       </svg>
