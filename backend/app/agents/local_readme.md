@@ -79,6 +79,17 @@ Omnigent's session history.
 | Report | `final_report.md`, or the latest `knowledge/cycle_<n>.md` |
 | Download zip | `GET /api/lab/runs/<run_id>/download`: the whole run folder |
 
+**Watchdog (stalled runs).** A Lead often ends its turn while its specialist is still working
+("waiting for the specialist"). Omnigent then tells the Director the Lead finished, and when the
+Lead later completes its decision (woken by its specialist, not by the Director), the Director is
+never notified: every agent goes idle and the run stalls (seen twice in run `pdrc-01`). The backend
+checks active runs every 20 s. When all agents are idle and a department logged a decision at least
+45 s ago, after the Director's last action, it types one note into the Director's session:
+`[Lab runtime] The <department> department logged its decision (<entry id>) … Read the department
+logs … then continue the run.` One note per log entry; each is saved in `runs/<run_id>/runtime.jsonl`
+and shown in the activity feed as `lab runtime`. It reports a fact the Director can check; it
+never decides what happens next.
+
 The page finds the backend by itself: the same address first (when the backend serves the site),
 then the Render backend. `?api=<url>` forces a backend and `?run=<run_id>` opens a run.
 
@@ -503,6 +514,9 @@ or code. Reference them as `${VAR}` in agent configs.
 ## Change log
 
 Newest first.
+
+- **Watchdog for stalled runs.** The backend tells the Director when a department logged a decision
+  it was not notified about, once per log entry. See "Website: live lab".
 
 - **Website live lab.** Section 06 of `frontend/index.html` and `backend/app/api/live.py`: problem
   statement box, agent activity feed, live experiment charts, report and zip download. The backend

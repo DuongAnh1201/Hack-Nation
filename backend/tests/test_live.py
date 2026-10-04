@@ -113,3 +113,35 @@ def test_run_ids_cannot_escape_the_runs_folder(client):
     assert client.get("/api/lab/runs/..%2F..%2Fetc/activity").status_code in (404, 422)
     assert client.get("/api/lab/runs/bad%20id/download").status_code == 422
     assert client.get("/api/lab/runs/missing/report").status_code == 404
+
+
+def test_watchdog_tells_the_director_about_a_missed_decision_once(client, fake_tmux, monkeypatch):
+    run = live.RUNS / "w1"
+    (run / "logs" / "hypothesis").mkdir(parents=True)
+    (run / "logs" / "hypothesis" / "department.jsonl").write_text(
+        json.dumps({"id": "hypothesis.department.1", "t": 1000.0, "department": "hypothesis", "level": "department"}) + "\n")
+    monkeypatch.setattr(live, "_root_session", lambda run_id, run_dir: "root")
+    monkeypatch.setattr(live, "_session_tree", lambda sid, agent, depth=0: [("root", "lab_director"), ("c1", "hypothesis")])
+    director_t = {"value": 900.0}
+    statuses = {"value": "idle"}
+
+    def omnigent(path, timeout=5.0):
+        if path.endswith("/items?limit=1&order=desc"):
+            return [{"created_at": str(director_t["value"])}]
+        return {"status": statuses["value"]}
+
+    monkeypatch.setattr(live, "_omnigent", omnigent)
+    monkeypatch.setattr(live.time, "time", lambda: 2000.0)
+
+    statuses["value"] = "running"
+    assert live._watchdog_check("w1") is None          # someone is still working
+    statuses["value"] = "idle"
+    text = live._watchdog_check("w1")
+    assert "hypothesis.department.1" in text and "run_id w1" in text
+    assert ["tmux", "send-keys", "-t", "physio-w1", "-l", text] in fake_tmux
+    assert live._watchdog_check("w1") is None          # only once per log entry
+    assert json.loads((run / "runtime.jsonl").read_text())["entry"] == "hypothesis.department.1"
+
+    director_t["value"] = 1500.0                       # Director already acted after the entry
+    (run / "live.json").write_text("{}")
+    assert live._watchdog_check("w1") is None

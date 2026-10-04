@@ -16,7 +16,8 @@ code (header X-Lab-Code), and only one run may be active at a time: they spend C
 hidden tmux window: `omni run -p` is one-shot and would stop the departments after the
 Director's first turn. Elsewhere (Render) the same endpoints serve runs already on disk.
 The backend never makes a scientific decision: it starts the Director with the user's
-problem statement and reads files and Omnigent's session history.
+problem statement and reads files and Omnigent's session history. A watchdog tells the
+Director when a department logged a decision it was not notified about (see below).
 """
 from __future__ import annotations
 
@@ -28,6 +29,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -126,6 +128,7 @@ def _tmux_alive(run_id: str) -> bool:
 @router.get("/status")
 def status() -> dict:
     """Whether this backend can start runs, and why not."""
+    _ensure_watchdog()
     reasons = []
     if not _allow_start():
         reasons.append("Starting runs is off on this server (set LAB_ALLOW_START=1 on the machine that runs Omnigent).")
@@ -237,6 +240,84 @@ def stop_run(run_id: str, x_lab_code: str | None = Header(default=None)) -> dict
     return {"run_id": run_id, "stopped": was_running}
 
 
+# --------------------------------------------------------------------------- watchdog
+
+# A Lead often ends its turn while its specialist is still working ("waiting for the specialist").
+# Omnigent then tells the Director the Lead finished, and when the Lead later completes its real
+# decision (woken by the specialist, not by the Director), nobody tells the Director. Every agent
+# goes idle and the run stalls. The watchdog notices a department decision logged after the
+# Director's last action and tells the Director, once per log entry. It makes no scientific
+# decision: it only reports a fact the Director can verify in the department logs.
+WATCHDOG_INTERVAL_S = 20
+WATCHDOG_SETTLE_S = 45
+_watchdog_started = False
+_watchdog_lock = threading.Lock()
+
+
+def _latest_department_entry(run_dir: Path) -> dict | None:
+    latest = None
+    for log in (run_dir / "logs").glob("*/department.jsonl") if (run_dir / "logs").is_dir() else []:
+        for entry in _read_jsonl(log):
+            if latest is None or entry.get("t", 0) > latest.get("t", 0):
+                latest = entry
+    return latest
+
+
+def _watchdog_check(run_id: str) -> str | None:
+    """Nudge the Director of one run if it missed a department decision. Returns the nudge text."""
+    run_dir = RUNS / run_id
+    root = _root_session(run_id, run_dir)
+    if not root:
+        return None
+    tree = _session_tree(root, "lab_director")
+    infos = [_omnigent(f"/v1/sessions/{sid}") or {} for sid, _ in tree]
+    if any((i.get("status") or "idle") != "idle" for i in infos):
+        return None
+    entry = _latest_department_entry(run_dir)
+    if not entry or time.time() - entry.get("t", 0) < WATCHDOG_SETTLE_S:
+        return None
+    last = _omnigent(f"/v1/sessions/{root}/items?limit=1&order=desc") or []
+    director_t = float(last[0].get("created_at") or 0) if isinstance(last, list) and last else 0.0
+    if entry.get("t", 0) <= director_t:
+        return None
+    live = _read_json(run_dir / "live.json")
+    if entry.get("id") in live.get("nudged", []):
+        return None
+    department = entry.get("department", "A department")
+    text = (
+        f"[Lab runtime] The {department} department logged its decision ({entry.get('id')}) after its "
+        f"earlier reply to you, so you were not notified. Read the department logs "
+        f"(read_all_department_logs, run_id {run_id}) and the record, then continue the run."
+    )
+    subprocess.run(["tmux", "send-keys", "-t", _tmux_name(run_id), "-l", text], check=False)
+    subprocess.run(["tmux", "send-keys", "-t", _tmux_name(run_id), "Enter"], check=False)
+    live["nudged"] = live.get("nudged", []) + [entry.get("id")]
+    (run_dir / "live.json").write_text(json.dumps(live), encoding="utf-8")
+    with open(run_dir / "runtime.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps({"t": time.time(), "kind": "nudge", "entry": entry.get("id"), "text": text}, ensure_ascii=False) + "\n")
+    return text
+
+
+def _watchdog_loop() -> None:
+    while True:
+        try:
+            for run_id in _active_runs():
+                _watchdog_check(run_id)
+        except Exception:  # never let the watchdog die; it retries next round
+            pass
+        time.sleep(WATCHDOG_INTERVAL_S)
+
+
+def _ensure_watchdog() -> None:
+    global _watchdog_started
+    if not _allow_start():
+        return
+    with _watchdog_lock:
+        if not _watchdog_started:
+            threading.Thread(target=_watchdog_loop, name="lab-watchdog", daemon=True).start()
+            _watchdog_started = True
+
+
 # --------------------------------------------------------------------------- observability
 
 
@@ -319,6 +400,8 @@ def activity(run_id: str, limit: int = 300) -> dict:
             events.append({"t": entry.get("t", 0), "agent": f"{entry.get('department')}_secretary",
                            "kind": f"log:{entry.get('level')}",
                            "text": f"{entry.get('id')} · {json.dumps(entry.get('payload'), ensure_ascii=False)[:TEXT_LIMIT]}"})
+    for entry in _read_jsonl(run_dir / "runtime.jsonl"):
+        events.append({"t": entry.get("t", 0), "agent": "lab_runtime", "kind": "runtime", "text": entry.get("text", "")})
     events.sort(key=lambda e: e["t"])
     problem = _read_json(run_dir / "problem.json")
     return {
