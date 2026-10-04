@@ -181,3 +181,25 @@ def test_common_knowledge_hub_integration(tmp_path, monkeypatch):
     assert "H1" in state["hypotheses"]
     assert state["hypotheses"]["H1"]["claim"] == "SiO2 + Si3N4 on Ag"
 
+
+def test_execute_experiment_script(tmp_path, monkeypatch):
+    from pathlib import Path
+    monkeypatch.chdir(tmp_path)
+    res = tools.execute_experiment_script(
+        experiment_id="E1",
+        materials=["SiO2", "HfO2", "SiO2"],
+        thicknesses_nm=[100.0, 50.0, 100.0],
+        substrate="Ag",
+        run_id="test_run",
+    )
+    assert res["status"] == "completed"
+    assert res["experiment_id"] == "E1"
+    assert Path(res["script_path"]).exists()
+    assert Path(res["csv_path"]).exists()
+    assert res["row_count"] >= 1
+    content = Path(res["script_path"]).read_text()
+    assert "Experiment Script: E1" in content
+    assert "Inputs:" in content
+    assert "Outputs:" in content
+
+

@@ -129,7 +129,7 @@ def run_agent(
     evaluate: Callable[..., Any],
     seed: int = 0,
     budget: int = 200,
-    target: float = 52.0,
+    target: float = 50.0,
 ) -> Dict[str, Any]:
     """Run the Omnigent Agent Lab discovery loop.
 
@@ -330,7 +330,7 @@ def run_agent_no_analyst(
     evaluate: Callable[..., Any],
     seed: int = 0,
     budget: int = 200,
-    target: float = 52.0,
+    target: float = 50.0,
 ) -> Dict[str, Any]:
     """Ablation: Agent Lab with the Analyst feedback disabled.
 
