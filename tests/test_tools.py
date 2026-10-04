@@ -273,3 +273,67 @@ def test_search_papers_alias():
     assert len(res) == 1
 
 
+
+
+def test_search_marks_origin_and_fallback_respects_allowed_sources(monkeypatch):
+    def offline(*args, **kwargs):
+        raise OSError("network disabled for this test")
+
+    monkeypatch.setattr(tools.urllib.request, "urlopen", offline)
+    papers = tools.search_academic_papers("radiative cooling", limit=10)
+    assert papers, "the offline fallback should still return papers"
+    for p in papers:
+        assert p["origin"] == "offline_fallback"
+        assert tools._is_legitimate_source("", p["venue"], p["doi"], p["url"])
+
+
+def test_fallback_database_entries_are_all_allowed_sources():
+    for paper in tools.VERIFIED_PAPERS_DATABASE:
+        assert tools._is_legitimate_source("", paper["venue"], paper["doi"], paper["url"]), paper["doi"]
+
+
+def test_compare_to_benchmark_with_optical_metrics():
+    comp = tools.compare_to_benchmark(12.5, solar_reflectance=0.95, window_emissivity=0.5)
+    assert comp["beats_target"] is True
+    control = tools._control_simulated()
+    assert comp["solar_reflectance"]["achieved"] == 0.95
+    assert comp["solar_reflectance"]["control"] == round(control["solar_reflectance"], 4)
+    assert comp["window_emissivity"]["delta"] == round(0.5 - control["window_emissivity"], 4)
+    assert "solar_reflectance" not in tools.compare_to_benchmark(12.5)
+
+
+def test_run_experiment_runs_agent_code_and_saves_output_log(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    exp_dir = tmp_path / "runs" / "r1" / "experiments" / "E1"
+    exp_dir.mkdir(parents=True)
+    (exp_dir / "run.py").write_text(
+        "from lab.physics import simulate_stack\n"
+        "from lab.csv_helper import write_results_csv\n"
+        "r = simulate_stack(['SiO2'], [500.0])\n"
+        "print('p_net', r['p_net_w_m2'])\n"
+        "write_results_csv([{'design_id': 'E1-001', 'materials': ['SiO2'], 'thicknesses_nm': [500.0],\n"
+        "                    'substrate': 'Ag', **r}], 'results.csv')\n"
+    )
+    script_before = (exp_dir / "run.py").read_text()
+
+    out = tools.run_experiment("E1", run_id="r1")
+
+    assert out["exit_code"] == 0 and out["timed_out"] is False
+    assert out["rows"] == 1
+    assert "p_net" in (exp_dir / "output.log").read_text()
+    assert (exp_dir / "run.py").read_text() == script_before
+
+
+def test_run_experiment_reports_failures_and_missing_script(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    exp_dir = tmp_path / "runs" / "r1" / "experiments" / "E2"
+    exp_dir.mkdir(parents=True)
+    (exp_dir / "run.py").write_text("raise SystemExit('bad plan')\n")
+
+    out = tools.run_experiment("E2", run_id="r1")
+    assert out["exit_code"] != 0
+    assert out["rows"] is None
+    assert "bad plan" in (exp_dir / "output.log").read_text()
+
+    with pytest.raises(FileNotFoundError):
+        tools.run_experiment("missing", run_id="r1")

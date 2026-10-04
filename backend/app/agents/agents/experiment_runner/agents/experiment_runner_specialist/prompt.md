@@ -23,12 +23,16 @@ runs/<run_id>/experiments/<experiment_id>/
    - what it needs: inputs, tools, packages;
    - what it produces;
    - the command that reproduces it: `python run.py`.
-   Run every simulation through the lab's tools (`simulate_stack`, `optimize_thicknesses`) so each
-   evaluation is counted. The code writes `results.csv` into its own folder.
-2. **Run.** Run `python run.py` from the experiment folder, and save everything it prints to
-   `output.log`.
-3. **Data.** `results.csv` has one row per simulation, with units in the column names (e.g.
-   `thickness_nm`, `p_net_w_m2`). Keep invalid and failed designs in the file, with the reason.
+   Run every simulation through `lab.physics` (`simulate_stack`, `optimize_thicknesses`) so each
+   evaluation is counted. Write `results.csv` into the script's own folder with
+   `lab.csv_helper.write_results_csv`. Follow the pattern in
+   `runs/example/experiments/E0/run.py`.
+2. **Run.** Call the `run_experiment` tool with the experiment ID. It runs `python run.py` in the
+   experiment folder, saves everything it prints to `output.log`, and returns the exit code and
+   the number of rows in `results.csv`.
+3. **Data.** `results.csv` has one row per simulation, in the standard columns of
+   `write_results_csv` (e.g. `thicknesses_nm`, `p_net_w_m2`). Keep invalid and failed designs in
+   the file, with the reason.
 
 Never change `run.py` after it has produced data. If the code must be fixed, save the fixed code
 in a new folder with a new experiment ID, so every CSV file sits next to the exact code that

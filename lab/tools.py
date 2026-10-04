@@ -27,7 +27,8 @@ STANFORD_BENCHMARK_TARGET_W_M2 = 11.83
 # Strict list of verified legitimate academic sources
 ALLOWED_VENUES = ("Springer", "Nature", "IEEE", "arXiv")
 
-# Curated, verified offline citations for fallback and zero-hallucination guarantee
+# Offline fallback when OpenAlex is unreachable. Every entry's DOI was checked against
+# OpenAlex, and every entry must pass _is_legitimate_source like a live result.
 VERIFIED_PAPERS_DATABASE = [
     {
         "title": "Passive radiative cooling below ambient air temperature under direct sunlight",
@@ -44,46 +45,6 @@ VERIFIED_PAPERS_DATABASE = [
         "citations": 2350,
     },
     {
-        "title": "Scalable-manufactured randomized glass-polymer hybrid metamaterial for daytime radiative cooling",
-        "authors": ["Yao Zhai", "Yaqiong Ma", "Sabrina N. David", "Dongliang Zhao", "Runnan Lou", "Gang Tan", "Ronggui Yang", "Xiaobo Yin"],
-        "year": 2017,
-        "venue": "Science (Springer Nature ref)",
-        "doi": "https://doi.org/10.1126/science.aai7899",
-        "url": "https://doi.org/10.1126/science.aai7899",
-        "abstract_excerpt": (
-            "A visibly translucent, randomized glass-polymer metamaterial made of SiO2 microspheres in polymethylpentene. "
-            "Exhibits infrared window emissivity greater than 0.93 and reflects solar irradiance when backed with silver, "
-            "delivering midday cooling power exceeding 93 W/m2."
-        ),
-        "citations": 1820,
-    },
-    {
-        "title": "Radiative cooling: Principles, progress, and potentials",
-        "authors": ["Md M. Hossain", "Min Gu"],
-        "year": 2016,
-        "venue": "Advanced Science (IEEE Photonics ref)",
-        "doi": "https://doi.org/10.1002/advs.201500360",
-        "url": "https://doi.org/10.1002/advs.201500360",
-        "abstract_excerpt": (
-            "Comprehensive review of passive radiative cooling physics, atmospheric transparency windows, "
-            "nanophotonic selective emitters, planar multilayer coatings, and broadband thermal radiators."
-        ),
-        "citations": 540,
-    },
-    {
-        "title": "Hierarchically porous polymer coatings for highly efficient daytime radiative cooling",
-        "authors": ["Jyotirmoy Mandal", "Yanke Fu", "Adam C. Overvig", "Miaoxin Jia", "Kechao Sun", "Norman Nan Shi", "He Zhou", "Xianghui Xiao", "Nanfang Yu", "Yuan Yang"],
-        "year": 2018,
-        "venue": "Science (Springer Nature ref)",
-        "doi": "https://doi.org/10.1126/science.aat9513",
-        "url": "https://doi.org/10.1126/science.aat9513",
-        "abstract_excerpt": (
-            "Demonstrates sub-ambient daytime radiative cooling using phase-inversion porous P(VdF-HFP) coatings. "
-            "Achieves solar reflectance of 0.96 and thermal emissivity of 0.97 without metal mirrors."
-        ),
-        "citations": 1410,
-    },
-    {
         "title": "Radiative cooling to deep sub-freezing temperatures through a 24-h day-night cycle",
         "authors": ["Zhen Chen", "Linxiao Zhu", "Aaswath Raman", "Shanhui Fan"],
         "year": 2016,
@@ -95,19 +56,6 @@ VERIFIED_PAPERS_DATABASE = [
             "reaching temperatures 42 C below ambient utilizing high selective emissivity in the 8-13 um window."
         ),
         "citations": 830,
-    },
-    {
-        "title": "Subambient daytime radiative cooling of planar multilayers using common dielectric materials",
-        "authors": ["Shanhui Fan", "Linxiao Zhu"],
-        "year": 2020,
-        "venue": "arXiv",
-        "doi": "https://doi.org/10.48550/arXiv.2006.01234",
-        "url": "https://arxiv.org/abs/2006.01234",
-        "abstract_excerpt": (
-            "Theoretical and computational analysis of 3-5 layer thin-film stacks using SiO2, Al2O3, and Si3N4 on Al mirrors. "
-            "Demonstrates that phonon reststrahlen overlap between SiO2 (9.3 um) and Al2O3 (10.5-12 um) effectively spans the atmospheric window."
-        ),
-        "citations": 65,
     },
 ]
 
@@ -135,6 +83,9 @@ def search_academic_papers(query: str, limit: int = 5) -> list:
 
     Zero hallucination policy: results are queried live from OpenAlex or retrieved from
     verified academic indexes. Articles from unapproved sources are rejected.
+
+    Every result has an ``origin``: ``"openalex"`` for a live result, ``"offline_fallback"``
+    for an entry from VERIFIED_PAPERS_DATABASE, so callers can tell them apart.
     """
     clean_query = query.strip()
     if not clean_query:
@@ -190,6 +141,7 @@ def search_academic_papers(query: str, limit: int = 5) -> list:
                     "url": landing_url,
                     "abstract_excerpt": abstract_excerpt,
                     "citations": item.get("cited_by_count", 0),
+                    "origin": "openalex",
                 })
                 if len(results) >= limit:
                     break
@@ -200,10 +152,12 @@ def search_academic_papers(query: str, limit: int = 5) -> list:
     if len(results) < limit:
         q_words = re.findall(r"\w+", clean_query.lower())
         for paper in VERIFIED_PAPERS_DATABASE:
+            if not _is_legitimate_source("", paper["venue"], paper["doi"], paper["url"]):
+                continue
             p_text = f"{paper['title']} {paper['abstract_excerpt']}".lower()
             if any(w in p_text for w in q_words) or not q_words:
                 if not any(r.get("doi") == paper["doi"] for r in results):
-                    results.append(paper)
+                    results.append({**paper, "origin": "offline_fallback"})
             if len(results) >= limit:
                 break
 
@@ -343,13 +297,31 @@ def optimize_thicknesses_tool(materials: list, substrate: str = "Ag", budget: in
     return res
 
 
-def compare_to_benchmark(p_net_w_m2: float) -> dict:
-    """Compare a cooling power result against the Stanford 2014 benchmark in our simulator (11.83 W/m2)."""
+def _control_simulated() -> dict:
+    """The Stanford control's simulated metrics from results/control.json ({} if missing)."""
+    path = Path(__file__).resolve().parents[1] / "results" / "control.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("simulated", {})
+    except (OSError, ValueError):
+        return {}
+
+
+def compare_to_benchmark(
+    p_net_w_m2: float,
+    solar_reflectance: float | None = None,
+    window_emissivity: float | None = None,
+) -> dict:
+    """Compare a design against the Stanford 2014 benchmark in our simulator (11.83 W/m2).
+
+    Cooling power is always compared. Solar reflectance and 8-13 um window emissivity are
+    compared with the control's simulated values when given. Reports numbers only; the
+    Analysis department decides what they mean.
+    """
     val = float(p_net_w_m2)
     delta = val - STANFORD_BENCHMARK_TARGET_W_M2
     beats = val >= STANFORD_BENCHMARK_TARGET_W_M2
     margin_pct = (delta / STANFORD_BENCHMARK_TARGET_W_M2) * 100.0
-    return {
+    result = {
         "target_w_m2": STANFORD_BENCHMARK_TARGET_W_M2,
         "achieved_w_m2": round(val, 2),
         "delta_w_m2": round(delta, 2),
@@ -357,6 +329,17 @@ def compare_to_benchmark(p_net_w_m2: float) -> dict:
         "margin_percent": round(margin_pct, 1),
         "benchmark_design": "Stanford 7-layer HfO2/SiO2 on Ag (Nature 2014)",
     }
+    control = _control_simulated()
+    for key, value in (("solar_reflectance", solar_reflectance), ("window_emissivity", window_emissivity)):
+        if value is None:
+            continue
+        reference = control.get(key)
+        result[key] = {
+            "achieved": round(float(value), 4),
+            "control": None if reference is None else round(float(reference), 4),
+            "delta": None if reference is None else round(float(value) - float(reference), 4),
+        }
+    return result
 
 
 def budget_left(run_id: str = "default", max_budget: int = 2000) -> dict:
@@ -634,6 +617,62 @@ if __name__ == "__main__":
         "best_p_net_w_m2": best_p_net,
         "solar_reflectance": best_r,
         "evaluations": evals,
+    }
+
+
+def run_experiment(experiment_id: str, run_id: str = "default", timeout_s: int = 600) -> dict:
+    """Run the agent-written experiment in runs/<run_id>/experiments/<experiment_id>/.
+
+    The Experiment Runner specialist writes run.py itself; this tool only executes it with
+    the current Python, from inside the experiment folder, and saves everything it prints
+    to output.log next to it. It never writes or changes run.py.
+
+    Args:
+        experiment_id: Name of the experiment folder, e.g. "E3".
+        run_id: Identifier of the run directory under runs/.
+        timeout_s: Seconds before the script is stopped.
+
+    Returns:
+        Exit code, whether it timed out, the folder and file paths, and the number of
+        rows in results.csv (None when run.py did not write one).
+    """
+    import subprocess
+    import sys
+
+    exp_dir = (Path("runs") / run_id / "experiments" / experiment_id).resolve()
+    script = exp_dir / "run.py"
+    if not script.is_file():
+        raise FileNotFoundError(f"No run.py in {exp_dir}; write the experiment code first.")
+
+    log_path = exp_dir / "output.log"
+    csv_path = exp_dir / "results.csv"
+    timed_out = False
+    with open(log_path, "w", encoding="utf-8") as log:
+        try:
+            proc = subprocess.run(
+                [sys.executable, "run.py"],
+                cwd=exp_dir,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=timeout_s,
+                check=False,
+            )
+            exit_code = proc.returncode
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            exit_code = None
+            log.write(f"\n[run_experiment] stopped after {timeout_s} s\n")
+
+    rows = len(read_results_csv(csv_path)) if csv_path.is_file() else None
+    return {
+        "experiment_id": experiment_id,
+        "exit_code": exit_code,
+        "timed_out": timed_out,
+        "experiment_dir": str(exp_dir),
+        "script_path": str(script),
+        "results_csv": str(csv_path) if csv_path.is_file() else None,
+        "rows": rows,
+        "output_log": str(log_path),
     }
 
 
