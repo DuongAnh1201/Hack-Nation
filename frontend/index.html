@@ -251,6 +251,25 @@ video.tc{position:fixed;z-index:6;left:50%;top:calc(8px + env(safe-area-inset-to
 .live-feed li.tool .tx,.live-feed li.result .tx{color:var(--muted)}
 .live-feed li.rec .kd{color:var(--amber)}
 .live-feed li.live-empty{display:block;color:var(--dim);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:14px 0}
+.live-path{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);min-height:18px}
+.live-path b{font-weight:400;padding:3px 7px;border:1px solid var(--frame)}
+.live-depts{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.live-dept{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--frame);border-top:2px solid var(--c,var(--frame));background:rgba(0,0,0,.35);min-width:0}
+.live-dept:hover,.live-dept.sel{background:rgba(255,255,255,.05)}
+.live-dept.sel{outline:1px solid var(--c)}
+.live-dept:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.live-dept.waiting{opacity:.45}
+.live-dept .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.live-dept .nm{font-family:var(--display);font-size:20px;font-weight:300;text-transform:uppercase;letter-spacing:.02em;color:var(--fg)}
+.live-dept .st{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.live-dept.working .st{color:var(--green)}
+.live-dept.working .st::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:1px;animation:blink 1.2s steps(1) infinite}
+.live-dept.error .st{color:var(--red)}
+.live-dept .role{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;font-size:10.5px;line-height:1.45}
+.live-dept .role>span:first-child{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding-top:1px}
+.live-dept .act{color:var(--fg);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.live-dept .act em{font-style:normal;color:var(--muted)}
+.live-dept .ft{display:flex;gap:12px;flex-wrap:wrap;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);border-top:1px solid rgba(255,255,255,.06);padding-top:6px}
 .live-charts{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px}
 .live-charts .chartbox{height:340px}
 .live-report pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;font:11px/1.65 var(--mono);color:var(--fg)}
@@ -487,6 +506,14 @@ video.tc{position:fixed;z-index:6;left:50%;top:calc(8px + env(safe-area-inset-to
           <div class="live-agents" id="liveAgents"></div>
           <ol class="live-feed" id="liveFeed" data-lenis-prevent></ol>
         </div>
+      </div>
+      <div class="glass live-card">
+        <div class="live-row" style="justify-content:space-between">
+          <span class="lab-label">Departments · what each agent is doing</span>
+          <span class="lab-label">Click a department to filter the activity</span>
+        </div>
+        <div class="live-path" id="livePath" aria-label="Order in which the Lab Director called departments"></div>
+        <div class="live-depts" id="liveDepts"></div>
       </div>
       <div class="live-charts">
         <div class="glass chartbox"><span class="lab-label">Net cooling power of every simulated design · dashed: Stanford control in our simulator</span><svg id="liveChartP" viewBox="0 0 640 300" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Net cooling power of each simulated design"></svg></div>
@@ -1165,13 +1192,103 @@ requestAnimationFrame(frame);
     const current = el.filter.value;
     el.filter.textContent = '';
     el.filter.append(new Option('All agents', ''));
+    const depts = [...new Set([...names].map(deptOf).filter(Boolean))];
+    for (const d of DEPT_INFO.map(x => x[0]).filter(x => depts.includes(x))) el.filter.append(new Option(`${DEPT_NAME[d]} (department)`, 'dept:' + d));
     for (const n of [...names].sort()) el.filter.append(new Option(n.replace(/_/g, ' '), n));
-    el.filter.value = names.has(current) ? current : '';
+    el.filter.value = [...el.filter.options].some(o => o.value === current) ? current : '';
+  }
+
+  const DEPT_INFO = [['lab_director', 'Lab Director'], ['literature', 'Literature'], ['hypothesis', 'Hypothesis'], ['planning', 'Planning'],
+    ['experiment_runner', 'Experiment Runner'], ['analysis', 'Analysis'], ['review_safety', 'Review & Safety'], ['knowledge_memory', 'Knowledge & Memory']];
+  const DEPT_NAME = Object.fromEntries(DEPT_INFO);
+  const deptOf = a => {
+    if (!a) return null;
+    if (a === 'lab_director') return a;
+    const hit = DEPT_INFO.slice(1).map(d => d[0]).sort((x, y) => y.length - x.length).find(d => a === d || a.startsWith(d + '_'));
+    return hit || null;
+  };
+  const roleOf = (a, d) => d === 'lab_director' ? 'Director' : a.endsWith('_specialist') ? 'Specialist' : a.endsWith('_secretary') ? 'Secretary' : 'Lead';
+  const ago = t => { const s = Math.max(0, Date.now() / 1000 - t); return s < 60 ? `${Math.round(s)} s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`; };
+  const describe = e => {
+    if (e.kind === 'tool_call') {
+      let args = {}; try { args = JSON.parse(e.text); } catch (x) { /* truncated */ }
+      const target = args.agent ? ` → ${args.agent}` : args.url ? ` ${args.url}` : args.query ? ` "${args.query}"` : '';
+      return ['called ', `${e.tool}${target}`];
+    }
+    if (e.kind === 'tool_result') return ['got a result: ', e.text];
+    if (e.kind === 'record') return ['wrote record ', e.text];
+    if (e.kind.startsWith('log:')) return [`logged (${e.kind.slice(4)}) `, e.text];
+    if (e.kind === 'message:user') return ['received: ', e.text];
+    return ['said: ', e.text];
+  };
+
+  function renderPath(events) {
+    el.path = el.path || $('livePath');
+    const path = [];
+    for (const e of events) {
+      if (e.agent !== 'lab_director' || e.tool !== 'sys_session_send') continue;
+      let args = {}; try { args = JSON.parse(e.text); } catch (x) { const m = /"agent":\s*"([a-z_]+)"/.exec(e.text); if (m) args.agent = m[1]; }
+      if (args.agent && path[path.length - 1] !== args.agent) path.push(args.agent);
+    }
+    el.path.textContent = '';
+    el.path.append('Path: ', Object.assign(document.createElement('b'), {textContent: 'Lab Director'}));
+    for (const d of path) {
+      el.path.append(' → ');
+      const b = Object.assign(document.createElement('b'), {textContent: DEPT_NAME[d] || d});
+      b.style.borderColor = agentColor(d); el.path.append(b);
+    }
+    if (!path.length) el.path.append(' · no department called yet');
+  }
+
+  function renderDepts(act) {
+    el.depts = el.depts || $('liveDepts');
+    el.depts.textContent = '';
+    const sessions = {};
+    for (const a of act.agents) { const d = deptOf(a.agent); if (d) (sessions[d] = sessions[d] || []).push(a); }
+    for (const [d, label] of DEPT_INFO) {
+      const evs = act.events.filter(e => deptOf(e.agent) === d);
+      const ss = sessions[d] || [];
+      let state = ss.some(s => s.error) ? 'error' : ss.some(s => s.status && s.status !== 'idle') ? 'working' : evs.length ? 'done' : 'waiting';
+      // The Director goes idle while a department works; it is waiting, not done, until the run ends.
+      if (d === 'lab_director' && state === 'done' && act.running) state = 'directing';
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = `live-dept ${state}` + (el.filter.value === 'dept:' + d ? ' sel' : '');
+      card.style.setProperty('--c', agentColor(d));
+      const hd = Object.assign(document.createElement('div'), {className: 'hd'});
+      hd.append(Object.assign(document.createElement('span'), {className: 'nm', textContent: label}),
+        Object.assign(document.createElement('span'), {className: 'st', textContent: {waiting: 'waiting', working: 'working', done: 'done', error: 'error', directing: 'waiting for a department'}[state]}));
+      card.append(hd);
+      const roles = d === 'lab_director' ? ['Director'] : ['Lead', 'Specialist', 'Secretary'];
+      for (const role of roles) {
+        const last = [...evs].reverse().find(e => roleOf(e.agent, d) === role);
+        const row = Object.assign(document.createElement('div'), {className: 'role'});
+        const actEl = Object.assign(document.createElement('span'), {className: 'act'});
+        if (last) {
+          const [verb, what] = describe(last);
+          actEl.append(Object.assign(document.createElement('em'), {textContent: `${ago(last.t)} · ${verb}`}), what);
+        } else {
+          actEl.append(Object.assign(document.createElement('em'), {textContent: 'not started'}));
+        }
+        row.append(Object.assign(document.createElement('span'), {textContent: role}), actEl);
+        card.append(row);
+      }
+      const err = ss.find(s => s.error);
+      if (err) card.append(Object.assign(document.createElement('div'), {className: 'role', textContent: `Error: ${typeof err.error === 'string' ? err.error : JSON.stringify(err.error)}`}));
+      const ft = Object.assign(document.createElement('div'), {className: 'ft'});
+      const n = k => evs.filter(e => e.kind === k || (k === 'log' && e.kind.startsWith('log:'))).length;
+      const cost = ss.reduce((s, a) => s + (a.cost_usd || 0), 0);
+      ft.append(`${n('tool_call')} tool calls`, ` · ${n('record')} records`, ` · ${n('log')} log entries`);
+      if (cost) ft.append(` · $${cost.toFixed(2)}`);
+      card.append(ft);
+      card.addEventListener('click', () => { el.filter.value = el.filter.value === 'dept:' + d ? '' : 'dept:' + d; renderFeed(); renderDepts(act); });
+      el.depts.append(card);
+    }
   }
 
   function renderFeed() {
     const only = el.filter.value;
-    const rows = lastEvents.filter(e => !only || e.agent === only);
+    const rows = lastEvents.filter(e => !only || (only.startsWith('dept:') ? deptOf(e.agent) === only.slice(5) : e.agent === only));
     el.feed.textContent = '';
     if (!rows.length) { const li = document.createElement('li'); li.className = 'live-empty'; li.textContent = runId ? 'No activity yet.' : 'Choose or start a run.'; el.feed.append(li); return; }
     for (const e of rows) {
@@ -1270,7 +1387,7 @@ requestAnimationFrame(frame);
     el.meta.textContent = '';
     const add = (k, v) => { el.meta.append(Object.assign(document.createElement('span'), {textContent: k}), Object.assign(document.createElement('b'), {textContent: v})); };
     add('Status', act.running ? 'running' : 'finished or stopped');
-    if (act.problem) add('Problem', act.problem);
+    if (act.problem) { add('Problem', act.problem.length > 220 ? act.problem.slice(0, 220).trimEnd() + '…' : act.problem); el.meta.lastChild.title = act.problem; }
     const running = data.experiments.filter(e => !e.finished).length;
     add('Experiments', `${data.experiments.length}${running ? ` (${running} running)` : ''}`);
     add('Designs simulated', String(data.experiments.reduce((n, e) => n + pointsOf(e).length, 0)));
@@ -1293,7 +1410,7 @@ requestAnimationFrame(frame);
       ]);
       if (id !== runId) return;
       lastEvents = act.events;
-      renderAgents(act.agents, act.events); renderFeed(); renderCharts(data); renderMeta(act, data);
+      renderAgents(act.agents, act.events); renderFeed(); renderPath(act.events); renderDepts(act); renderCharts(data); renderMeta(act, data);
       el.reportLabel.textContent = rep.file ? `Report · ${rep.file}` : 'Report';
       el.report.textContent = rep.markdown || 'No report yet. Knowledge & Memory writes one at the end of each cycle.';
       timer = setTimeout(refresh, act.running ? 3000 : 20000);
@@ -1323,7 +1440,7 @@ requestAnimationFrame(frame);
     loadRuns(runId);
   });
   el.run.addEventListener('change', () => choose(el.run.value));
-  el.filter.addEventListener('change', renderFeed);
+  el.filter.addEventListener('change', () => { renderFeed(); refresh(); });
 
   (async () => {
     status = await findApi();

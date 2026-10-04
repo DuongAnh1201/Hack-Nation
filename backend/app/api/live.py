@@ -253,10 +253,19 @@ def _item_event(item: dict, agent: str) -> dict | None:
         name = (item.get("name") or "").replace("mcp__omnigent__", "")
         if name in ("ToolSearch", "sys_read_inbox"):
             return None
-        return {"t": t, "agent": agent, "kind": "tool_call", "tool": name,
-                "text": (item.get("arguments") or "")[:TEXT_LIMIT]}
+        args = item.get("arguments") or ""
+        try:  # show symbols (τ, −, µ) instead of \u escapes
+            args = json.dumps(json.loads(args), ensure_ascii=False)
+        except ValueError:
+            pass
+        return {"t": t, "agent": agent, "kind": "tool_call", "tool": name, "text": args[:TEXT_LIMIT]}
     if kind == "function_call_output":
-        return {"t": t, "agent": agent, "kind": "tool_result", "text": str(item.get("output") or "")[:TEXT_LIMIT]}
+        out = str(item.get("output") or "")
+        try:
+            out = json.dumps(json.loads(out), ensure_ascii=False)
+        except ValueError:
+            pass
+        return {"t": t, "agent": agent, "kind": "tool_result", "text": out[:TEXT_LIMIT]}
     return None
 
 
@@ -304,12 +313,12 @@ def activity(run_id: str, limit: int = 300) -> dict:
                     events.append(event)
     for entry in _read_jsonl(run_dir / "record.jsonl"):
         events.append({"t": entry.get("t", 0), "agent": entry.get("agent", ""), "kind": "record",
-                       "text": f"{entry.get('id')} · {entry.get('kind')} · {json.dumps(entry.get('content'))[:TEXT_LIMIT]}"})
+                       "text": f"{entry.get('id')} · {entry.get('kind')} · {json.dumps(entry.get('content'), ensure_ascii=False)[:TEXT_LIMIT]}"})
     for log in sorted((run_dir / "logs").glob("*/*.jsonl")) if (run_dir / "logs").is_dir() else []:
         for entry in _read_jsonl(log):
             events.append({"t": entry.get("t", 0), "agent": f"{entry.get('department')}_secretary",
                            "kind": f"log:{entry.get('level')}",
-                           "text": f"{entry.get('id')} · {json.dumps(entry.get('payload'))[:TEXT_LIMIT]}"})
+                           "text": f"{entry.get('id')} · {json.dumps(entry.get('payload'), ensure_ascii=False)[:TEXT_LIMIT]}"})
     events.sort(key=lambda e: e["t"])
     problem = _read_json(run_dir / "problem.json")
     return {
