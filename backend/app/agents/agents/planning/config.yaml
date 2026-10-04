@@ -1,7 +1,7 @@
 spec_version: 1
 name: planning
 description: >-
-  Decides which of 2+ candidate tests to run, within budget.
+  Decides how the lab tests a hypothesis: which experiment, why, and whether the agents can run it.
 
 executor:
   type: omnigent
