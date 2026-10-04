@@ -8,7 +8,7 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
-    autoDeploy: false # deploys are triggered by GitHub Actions after CI passes
+    autoDeploy: true # redeploy on every push to main
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.7"
