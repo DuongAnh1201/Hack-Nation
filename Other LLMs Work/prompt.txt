@@ -1,0 +1,18 @@
+@Deep research You are a senior nanophotonics researcher tasked with designing a passive daytime radiative cooling coating.
+
+Objective:
+Design a thin-film multilayer optical coating deposited on a Silver (Ag) substrate that achieves sub-ambient cooling under direct sunlight (AM1.5 spectrum, clear sky, 8–13 µm atmospheric transmission window).
+
+Constraints:
+
+1. Maximum layers: At most 5 layers.
+2. Search space materials: Only choose from [SiO2, Si3N4, Al2O3, TiO2, MgF2] on an Ag substrate. (HfO2 is strictly excluded due to cost and scarcity).
+3. Thickness per layer: Each layer thickness must be strictly bounded between 10 nm and 1,000 nm.
+4. Target performance: Achieve a net cooling power P_net ≥ 39.8 W/m² at T = T_amb = 300 K, matching or outperforming the landmark Stanford 7-layer HfO2/SiO2 benchmark (Raman et al., Nature 2014).
+
+Deliverables:
+
+1. The exact sequence of materials (from top surface down to the Ag substrate) and exact thickness in nanometers for each layer.
+2. Calculated solar reflectance (0.3–2.5 µm) and atmospheric window emissivity (8–13 µm).
+3. Physical rationale for refractive index contrast and phononic resonance modes.
+4. Cited evidence and step-by-step hypothesis verification.
