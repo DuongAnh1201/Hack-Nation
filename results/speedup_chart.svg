@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" width="760" height="460" role="img" aria-labelledby="t d">
 <title id="t">Share of runs that reached the target vs simulator evaluations</title>
-<desc id="d">On the same simulator, search space and budget (100 evaluations per run, 10 runs per method), the median number of evaluations needed to reach the target net cooling power of 50 W/m² (the Stanford design in our simulator) was: the agent lab 34 (9/10 runs reached it); random search &gt; 100 (3/10 runs reached it); Alternating 27 (7/10 runs reached it); Bayesian optimization 45 (10/10 runs reached it); Genetic algorithm 60 (8/10 runs reached it); the ablation without analyst feedback &gt; 100 (0/10 runs reached it). The agent lab needed about 2.9× fewer evaluations than random search (95% CI 2.6×–3.8×); we claim at least 2.6×. Random search reached the target in fewer than half of its runs, so its median is capped at the budget of 100 and the true speed-up is larger. No speed-up: the agent lab needed 1.3× as many evaluations as Alternating (median). The agent lab needed 1.3× fewer evaluations than Bayesian optimization in the point estimate, but the 95% CI (0.8×–1.8×) includes no speed-up, so no speed-up is claimed. The agent lab needed 1.8× fewer evaluations than Genetic algorithm in the point estimate, but the 95% CI (1.0×–3.0×) includes no speed-up, so no speed-up is claimed. The agent lab needed about 2.9× fewer evaluations than the ablation without analyst feedback (95% CI 2.9×–3.8×); we claim at least 2.9×. The ablation without analyst feedback reached the target in fewer than half of its runs, so its median is capped at the budget of 100 and the true speed-up is larger. Failed runs are included in every number.</desc>
+<desc id="d">On the same simulator, search space and budget (100 evaluations per run, 5 runs per method), the median number of evaluations needed to reach the target net cooling power of 50 W/m² (the Stanford design in our simulator) was: Scripted oracle (upper bound) 34 (4/5 runs reached it); random search &gt; 100 (2/5 runs reached it); Alternating 27 (4/5 runs reached it); Bayesian optimization 45 (5/5 runs reached it); Genetic algorithm 99 (3/5 runs reached it); Scripted oracle no analyst &gt; 100 (0/5 runs reached it). Scripted oracle (upper bound) needed 2.9× fewer evaluations than random search in the point estimate, but the 95% CI (0.0×–3.6×) includes no speed-up, so no speed-up is claimed. Random search reached the target in fewer than half of its runs, so its median is capped at the budget of 100 and the true speed-up is larger. No speed-up: Scripted oracle (upper bound) needed 1.3× as many evaluations as Alternating (median). Scripted oracle (upper bound) needed 1.3× fewer evaluations than Bayesian optimization in the point estimate, but the 95% CI (0.0×–1.6×) includes no speed-up, so no speed-up is claimed. Scripted oracle (upper bound) needed 2.9× fewer evaluations than Genetic algorithm in the point estimate, but the 95% CI (0.0×–3.5×) includes no speed-up, so no speed-up is claimed. Scripted oracle (upper bound) needed 2.9× fewer evaluations than Scripted oracle no analyst in the point estimate, but the 95% CI (0.0×–3.6×) includes no speed-up, so no speed-up is claimed. Scripted oracle no analyst reached the target in fewer than half of its runs, so its median is capped at the budget of 100 and the true speed-up is larger. Failed runs are included in every number.</desc>
 <rect width="760" height="460" fill="#fcfcfb"/>
 <text x="64" y="30" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="16" font-weight="600" fill="#0b0b0b">Share of runs that reached the target cooling power</text>
-<text x="64" y="50" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">target 50 W/m² (Stanford design in our simulator) · budget 100 evaluations · 10 runs per method</text>
+<text x="64" y="50" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">target 50 W/m² (Stanford design in our simulator) · budget 100 evaluations · 5 runs per method</text>
 <text x="64" y="68" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Dots mark each method's median (where its line crosses 50%). Failed runs keep a line below 100%.</text>
-<line x1="64" y1="94" x2="82" y2="94" stroke="#2a78d6" stroke-width="2.5" stroke-linecap="round"/>
-<text x="88" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Agent lab</text>
-<line x1="169.4" y1="94" x2="187.4" y2="94" stroke="#1baf7a" stroke-width="2.5" stroke-linecap="round"/>
-<text x="193.4" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Random search</text>
-<line x1="301.20000000000005" y1="94" x2="319.20000000000005" y2="94" stroke="#eda100" stroke-width="2.5" stroke-linecap="round"/>
-<text x="325.20000000000005" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Alternating</text>
-<line x1="419.80000000000007" y1="94" x2="437.80000000000007" y2="94" stroke="#eb6834" stroke-width="2.5" stroke-linecap="round"/>
-<text x="443.80000000000007" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Bayesian optimization</text>
+<line x1="64" y1="94" x2="82" y2="94" stroke="#7048e8" stroke-width="2.5" stroke-linecap="round"/>
+<text x="88" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Scripted oracle (upper bound)</text>
+<line x1="301.4" y1="94" x2="319.4" y2="94" stroke="#1baf7a" stroke-width="2.5" stroke-linecap="round"/>
+<text x="325.4" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Random search</text>
+<line x1="433.2" y1="94" x2="451.2" y2="94" stroke="#eda100" stroke-width="2.5" stroke-linecap="round"/>
+<text x="457.2" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Alternating</text>
+<line x1="551.8" y1="94" x2="569.8" y2="94" stroke="#eb6834" stroke-width="2.5" stroke-linecap="round"/>
+<text x="575.8" y="98" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Bayesian optimization</text>
 <line x1="64" y1="114" x2="82" y2="114" stroke="#e87ba4" stroke-width="2.5" stroke-linecap="round"/>
 <text x="88" y="118" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Genetic algorithm</text>
 <line x1="222.2" y1="114" x2="240.2" y2="114" stroke="#008300" stroke-width="2.5" stroke-linecap="round"/>
-<text x="246.2" y="118" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Agent lab, no analyst feedback (ablation)</text>
+<text x="246.2" y="118" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e">Scripted oracle no analyst</text>
 <line x1="64" y1="402.0" x2="570" y2="402.0" stroke="#c3c2b7" stroke-width="1"/>
 <text x="56" y="406.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#898781" text-anchor="end">0%</text>
 <line x1="64" y1="336.5" x2="570" y2="336.5" stroke="#e1e0d9" stroke-width="1"/>
@@ -43,36 +43,36 @@
 <text transform="translate(16 271.0) rotate(-90)" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">Runs that reached the target</text>
 <path d="M64.0,402.0 H570.0 V402.0" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
 <path d="M64.0,402.0 H570.0 V402.0" fill="none" stroke="#008300" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M64.0,402.0 H205.7 V375.8 H225.9 V349.6 H231.0 V323.4 H337.2 V297.2 H367.6 V271.0 H403.0 V244.8 H453.6 V218.6 H564.9 V192.4 H570.0 V192.4" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
-<path d="M64.0,402.0 H205.7 V375.8 H225.9 V349.6 H231.0 V323.4 H337.2 V297.2 H367.6 V271.0 H403.0 V244.8 H453.6 V218.6 H564.9 V192.4 H570.0 V192.4" fill="none" stroke="#e87ba4" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M64.0,402.0 H139.9 V375.8 H170.3 V349.6 H225.9 V323.4 H236.0 V297.2 H291.7 V271.0 H301.8 V244.8 H301.8 V218.6 H311.9 V192.4 H342.3 V166.2 H398.0 V140.0 H570.0 V140.0" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
-<path d="M64.0,402.0 H139.9 V375.8 H170.3 V349.6 H225.9 V323.4 H236.0 V297.2 H291.7 V271.0 H301.8 V244.8 H301.8 V218.6 H311.9 V192.4 H342.3 V166.2 H398.0 V140.0 H570.0 V140.0" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M64.0,402.0 H104.5 V375.8 H114.6 V349.6 H165.2 V323.4 H175.3 V297.2 H200.6 V271.0 H215.8 V244.8 H468.8 V218.6 H570.0 V218.6" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
-<path d="M64.0,402.0 H104.5 V375.8 H114.6 V349.6 H165.2 V323.4 H175.3 V297.2 H200.6 V271.0 H215.8 V244.8 H468.8 V218.6 H570.0 V218.6" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M64.0,402.0 H398.0 V375.8 H484.0 V349.6 H514.3 V323.4 H570.0 V323.4" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
-<path d="M64.0,402.0 H398.0 V375.8 H484.0 V349.6 H514.3 V323.4 H570.0 V323.4" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<path d="M64.0,402.0 H170.3 V375.8 H195.6 V349.6 H195.6 V323.4 H205.7 V297.2 H236.0 V271.0 H236.0 V244.8 H236.0 V218.6 H236.0 V192.4 H251.2 V166.2 H570.0 V166.2" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
-<path d="M64.0,402.0 H170.3 V375.8 H195.6 V349.6 H195.6 V323.4 H205.7 V297.2 H236.0 V271.0 H236.0 V244.8 H236.0 V218.6 H236.0 V192.4 H251.2 V166.2 H570.0 V166.2" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="367.6" cy="271.0" r="5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"><title>Genetic algorithm: median 60 evaluations</title></circle>
+<path d="M64.0,402.0 H205.7 V349.6 H453.6 V297.2 H564.9 V244.8 H570.0 V244.8" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H205.7 V349.6 H453.6 V297.2 H564.9 V244.8 H570.0 V244.8" fill="none" stroke="#e87ba4" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64.0,402.0 H139.9 V349.6 H170.3 V297.2 H291.7 V244.8 H311.9 V192.4 H342.3 V140.0 H570.0 V140.0" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H139.9 V349.6 H170.3 V297.2 H291.7 V244.8 H311.9 V192.4 H342.3 V140.0 H570.0 V140.0" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64.0,402.0 H104.5 V349.6 H114.6 V297.2 H200.6 V244.8 H468.8 V192.4 H570.0 V192.4" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H104.5 V349.6 H114.6 V297.2 H200.6 V244.8 H468.8 V192.4 H570.0 V192.4" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64.0,402.0 H484.0 V349.6 H514.3 V297.2 H570.0 V297.2" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H484.0 V349.6 H514.3 V297.2 H570.0 V297.2" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M64.0,402.0 H205.7 V349.6 H236.0 V297.2 H236.0 V244.8 H251.2 V192.4 H570.0 V192.4" fill="none" stroke="#fcfcfb" stroke-width="6" stroke-linejoin="round"/>
+<path d="M64.0,402.0 H205.7 V349.6 H236.0 V297.2 H236.0 V244.8 H251.2 V192.4 H570.0 V192.4" fill="none" stroke="#7048e8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="564.9" cy="271.0" r="5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"><title>Genetic algorithm: median 99 evaluations</title></circle>
 <circle cx="291.7" cy="271.0" r="5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Bayesian optimization: median 45 evaluations</title></circle>
 <circle cx="200.6" cy="271.0" r="5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"><title>Alternating: median 27 evaluations</title></circle>
-<circle cx="236.0" cy="271.0" r="5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Agent lab: median 34 evaluations</title></circle>
+<circle cx="236.0" cy="271.0" r="5" fill="#7048e8" stroke="#fcfcfb" stroke-width="2"><title>Scripted oracle (upper bound): median 34 evaluations</title></circle>
 <line x1="580" y1="140.0" x2="592" y2="140.0" stroke="#eb6834" stroke-width="2.5" stroke-linecap="round"/>
 <text x="598" y="144.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Bayesian opt.</text>
-<text x="598" y="158.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">10/10 reached · median 45</text>
-<line x1="580" y1="170.0" x2="592" y2="170.0" stroke="#2a78d6" stroke-width="2.5" stroke-linecap="round"/>
-<text x="598" y="174.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Agent lab</text>
-<text x="598" y="188.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">9/10 reached · median 34</text>
-<line x1="580" y1="200.0" x2="592" y2="200.0" stroke="#e87ba4" stroke-width="2.5" stroke-linecap="round"/>
-<text x="598" y="204.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Genetic algorit…</text>
-<text x="598" y="218.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">8/10 reached · median 60</text>
-<line x1="580" y1="230.0" x2="592" y2="230.0" stroke="#eda100" stroke-width="2.5" stroke-linecap="round"/>
-<text x="598" y="234.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Alternating</text>
-<text x="598" y="248.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">7/10 reached · median 27</text>
-<line x1="580" y1="323.4" x2="592" y2="323.4" stroke="#1baf7a" stroke-width="2.5" stroke-linecap="round"/>
-<text x="598" y="327.4" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Random search</text>
-<text x="598" y="341.4" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">3/10 reached · median > 100</text>
+<text x="598" y="158.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">5/5 reached · median 45</text>
+<line x1="580" y1="192.4" x2="592" y2="192.4" stroke="#eda100" stroke-width="2.5" stroke-linecap="round"/>
+<text x="598" y="196.4" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Alternating</text>
+<text x="598" y="210.4" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">4/5 reached · median 27</text>
+<line x1="580" y1="222.4" x2="592" y2="222.4" stroke="#7048e8" stroke-width="2.5" stroke-linecap="round"/>
+<text x="598" y="226.4" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Scripted oracle</text>
+<text x="598" y="240.4" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">4/5 reached · median 34</text>
+<line x1="580" y1="252.4" x2="592" y2="252.4" stroke="#e87ba4" stroke-width="2.5" stroke-linecap="round"/>
+<text x="598" y="256.4" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Genetic algorit…</text>
+<text x="598" y="270.4" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">3/5 reached · median 99</text>
+<line x1="580" y1="297.2" x2="592" y2="297.2" stroke="#1baf7a" stroke-width="2.5" stroke-linecap="round"/>
+<text x="598" y="301.2" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Random search</text>
+<text x="598" y="315.2" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">2/5 reached · median > 100</text>
 <line x1="580" y1="402.0" x2="592" y2="402.0" stroke="#008300" stroke-width="2.5" stroke-linecap="round"/>
-<text x="598" y="406.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Ablation</text>
-<text x="598" y="420.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">0/10 reached · median > 100</text>
+<text x="598" y="406.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#0b0b0b">Scripted oracle…</text>
+<text x="598" y="420.0" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#52514e">0/5 reached · median > 100</text>
 </svg>

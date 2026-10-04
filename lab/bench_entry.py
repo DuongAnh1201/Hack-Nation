@@ -222,8 +222,8 @@ def run_agent(
     }, based_on=[p1])
 
     c_res = _invoke_eval(evaluate, c_mats, c_thick, "Ag")
-    c_pnet = c_res.get("p_net_w_m2") if c_res.get("p_net_w_m2") is not None else 11.83
-    c_r = c_res.get("solar_reflectance") if c_res.get("solar_reflectance") is not None else 0.977
+    c_pnet = c_res.get("p_net_w_m2")
+    c_r = c_res.get("solar_reflectance")
 
     r1 = log("result", "experiment_runner", {
         "experiment": e1,
@@ -232,11 +232,11 @@ def run_agent(
         "evaluations": 1,
     }, based_on=[e1])
 
-
+    c_ok = c_r is not None and c_r >= 0.95
     v1 = log("verdict", "analyst", {
         "hypothesis": h1,
-        "status": "supported",
-        "reason": f"Solar reflectance {c_r:.3f} passes tolerance. Benchmark target set to {target:.1f} W/m2",
+        "status": "supported" if c_ok else "refuted",
+        "reason": f"Solar reflectance {c_r:.3f} {'passes' if c_ok else 'fails'} tolerance. Target: {target:.1f} W/m2" if c_r is not None else "Control evaluation failed",
     }, based_on=[r1, l1])
 
     # 3. Hypothesis formulation (Cycle 1)
@@ -271,8 +271,8 @@ def run_agent(
         "eval_budget": 40,
     }, based_on=[p2, h2])
 
-    r2_pnet = opt_e2["best"].get("p_net_w_m2") if opt_e2["best"].get("p_net_w_m2") is not None else 39.8
-    r2_r = opt_e2["best"].get("solar_reflectance") if opt_e2["best"].get("solar_reflectance") is not None else 0.965
+    r2_pnet = opt_e2["best"].get("p_net_w_m2")
+    r2_r = opt_e2["best"].get("solar_reflectance")
     r2 = log("result", "experiment_runner", {
         "experiment": e2,
         "p_net_w_m2": r2_pnet,
@@ -280,13 +280,14 @@ def run_agent(
         "evaluations": opt_e2["evaluations"],
     }, based_on=[e2])
 
-    # 4. Analyst Verdict: REFUTED (TiO2 absorbs near-UV)
+    # 4. Analyst Verdict: strictly determined by measured P_net vs target
     llm_calls += 2
+    v2_supported = r2_pnet is not None and r2_pnet >= target
     v2 = log("verdict", "analyst", {
         "hypothesis": h2,
-        "status": "refuted",
-        "reason": f"P_net {r2_pnet:.2f} W/m2 < {target:.1f} W/m2 target. TiO2 causes near-UV interband absorption below 0.38 um.",
-        "next": "Replace TiO2 with Si3N4 (transparent in near-UV with 8-11.5 um phonon resonance).",
+        "status": "supported" if v2_supported else "refuted",
+        "reason": f"P_net {r2_pnet:.2f} W/m2 reaches target {target:.1f} W/m2." if v2_supported else f"P_net {r2_pnet if r2_pnet is not None else 'None'} < {target:.1f} W/m2 target. TiO2 causes near-UV interband absorption below 0.38 um.",
+        "next": "Target reached." if v2_supported else "Replace TiO2 with Si3N4 (transparent in near-UV with 8-11.5 um phonon resonance).",
     }, based_on=[r2, h2])
 
     # 5. Cycle 2: Evidence directly changes next hypothesis and plan!
@@ -315,8 +316,8 @@ def run_agent(
         "eval_budget": 50,
     }, based_on=[p3, h4])
 
-    r3_pnet = opt_e3["best"].get("p_net_w_m2") if opt_e3["best"].get("p_net_w_m2") is not None else 55.2
-    r3_r = opt_e3["best"].get("solar_reflectance") if opt_e3["best"].get("solar_reflectance") is not None else 0.978
+    r3_pnet = opt_e3["best"].get("p_net_w_m2")
+    r3_r = opt_e3["best"].get("solar_reflectance")
 
     r3 = log("result", "experiment_runner", {
         "experiment": e3,
@@ -325,10 +326,11 @@ def run_agent(
         "evaluations": opt_e3["evaluations"],
     }, based_on=[e3])
 
+    v3_supported = r3_pnet is not None and r3_pnet >= target
     v3 = log("verdict", "analyst", {
         "hypothesis": h4,
-        "status": "supported" if r3_pnet >= target else "inconclusive",
-        "reason": f"P_net {r3_pnet:.2f} W/m2 reaches target {target:.1f} W/m2 with 4 cheap layers.",
+        "status": "supported" if v3_supported else "refuted",
+        "reason": f"P_net {r3_pnet:.2f} W/m2 reaches target {target:.1f} W/m2 with 4 cheap layers." if v3_supported else f"P_net {r3_pnet if r3_pnet is not None else 'None'} did not reach target {target:.1f} W/m2.",
     }, based_on=[r3, h4])
 
     # 6. Safety Approval for Fabrication
@@ -407,7 +409,7 @@ def run_agent_no_analyst(
     res = _optimize_with_eval(evaluate, ["TiO2", "SiO2", "TiO2", "SiO2", "SiO2"], "Ag", budget=50, seed=seed)
     log("result", "experiment_runner", {
         "experiment": e1,
-        "p_net_w_m2": res["best"].get("p_net_w_m2", 39.5),
+        "p_net_w_m2": res["best"].get("p_net_w_m2"),
         "evaluations": res["evaluations"],
     }, based_on=[e1])
 
@@ -415,3 +417,8 @@ def run_agent_no_analyst(
         "llm_calls": llm_calls,
         "record_path": str(record_path),
     }
+
+
+# Aliases for honest benchmark naming (Issue #47)
+run_scripted_oracle = run_agent
+run_scripted_oracle_no_analyst = run_agent_no_analyst
