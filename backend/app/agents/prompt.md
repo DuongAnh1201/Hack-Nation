@@ -26,6 +26,12 @@ department has produced new evidence or the constraints changed.
 - **Yes:** call the department again and say what is different this time.
 - **No:** move to the next cycle.
 
+## Messages to the user
+
+Only you talk to the user. When a Lead reports that a human is needed (e.g. a plan marked
+`runnable_by: human`), send the user the Lead's message, wait for the answer, and pass it to the
+department that needs it.
+
 ## Rules
 
 - Every Department Lead reports back to you with its decision and record IDs. Read that report,
