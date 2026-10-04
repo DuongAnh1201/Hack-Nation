@@ -365,7 +365,7 @@ def test_specialist_logs_stay_out_of_hub_and_director_view(tmp_path, monkeypatch
     assert set(everything) == set(tools.DEPARTMENTS)
     assert [e["payload"] for e in everything["analysis"]] == [{"verdict": "refuted"}]
     assert all(e["level"] == "department" for entries in everything.values() for e in entries)
-    assert tools.read_common_knowledge()["best_p_net_w_m2"] is None
+    assert tools.read_common_knowledge("r1")["best_p_net_w_m2"] is None
 
 
 def test_log_tools_reject_unknown_department_or_level(tmp_path, monkeypatch):
@@ -375,3 +375,20 @@ def test_log_tools_reject_unknown_department_or_level(tmp_path, monkeypatch):
     with pytest.raises(ValueError):
         tools.log_to_common_knowledge("literature", {}, level="private", run_id="r1")
     assert tools.read_department_logs("literature", run_id="empty") == []
+
+
+def test_common_knowledge_is_per_run_and_packaged(tmp_path, monkeypatch):
+    import zipfile
+
+    monkeypatch.chdir(tmp_path)
+    tools.log_to_common_knowledge("hypothesis", {"id": "H1", "claim": "run A claim"}, run_id="run_a")
+    tools.log_to_common_knowledge("hypothesis", {"id": "H1", "claim": "run B claim"}, run_id="run_b")
+
+    assert (tmp_path / "runs" / "run_a" / "common_knowledge.json").is_file()
+    assert not (tmp_path / "runs" / "common_knowledge.json").exists()
+    assert tools.read_common_knowledge("run_a")["hypotheses"]["H1"]["claim"] == "run A claim"
+    assert tools.read_common_knowledge("run_b")["hypotheses"]["H1"]["claim"] == "run B claim"
+    assert tools.read_common_knowledge("run_c")["hypotheses"] == {}
+
+    with zipfile.ZipFile(tools.package_run("run_a")) as z:
+        assert "common_knowledge.json" in z.namelist()

@@ -41,6 +41,7 @@ All of it is in `runs/<run_id>/`:
 - `logs/<department>/department.jsonl`: the department logs of all departments, all cycles. You
   cannot read any department's specialist log.
 - `experiments/<experiment_id>/results.csv`: the data of every experiment, all cycles.
+- `common_knowledge.json`: this run's Common Knowledge so far, built from the department logs.
 
 ## What to write
 

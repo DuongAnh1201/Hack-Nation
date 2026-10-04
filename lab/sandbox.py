@@ -135,11 +135,21 @@ class CommonKnowledge:
         return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
 
 
+def common_knowledge_path(run_id: str = "default", workspace_dir: Optional[Path] = None) -> Path:
+    """Where a run's Common Knowledge lives: runs/<run_id>/common_knowledge.json.
+
+    A run is one whole research project, across all its cycles. Each run has its own file,
+    inside its run folder, so it is packaged into that run's zip.
+    """
+    clean_id = run_id.strip() or "default"
+    return (workspace_dir or Path.cwd()) / "runs" / clean_id / "common_knowledge.json"
+
+
 class CommonKnowledgeHub:
     """Knowledge & Memory Hub that aggregates findings and prepares next cycle context."""
 
-    def __init__(self, storage_path: Optional[Path] = None):
-        self.storage_path = storage_path or (Path.cwd() / "runs" / "common_knowledge.json")
+    def __init__(self, storage_path: Optional[Path] = None, run_id: str = "default"):
+        self.storage_path = storage_path or common_knowledge_path(run_id)
         self.state = CommonKnowledge()
         self._load_if_exists()
 
@@ -277,12 +287,13 @@ class MicroVMManager:
         prefix: str = "rc-sbx",
         default_backend: Optional[str] = None,
         workspace_dir: Optional[Path] = None,
+        run_id: str = "default",
     ):
         self.prefix = prefix
         self.workspace_dir = workspace_dir or Path.cwd()
         self.sandboxes: Dict[str, MicroVMInstance] = {}
         self.knowledge_hub = CommonKnowledgeHub(
-            storage_path=self.workspace_dir / "runs" / "common_knowledge.json"
+            storage_path=common_knowledge_path(run_id, self.workspace_dir)
         )
 
         # Detect active backend

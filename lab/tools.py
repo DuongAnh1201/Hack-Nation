@@ -497,7 +497,8 @@ def log_to_common_knowledge(
 
     Levels (see backend/app/agents/local_readme.md, "Log permissions"):
     - "department": the Lead's decisions and reports. Readable by the Lead, the Lab Director
-      and the Knowledge Lead. Also recorded in the cross-cycle Common Knowledge Hub.
+      and the Knowledge Lead. Also recorded in the run's Common Knowledge
+      (runs/<run_id>/common_knowledge.json).
     - "specialist": the specialist's results. Readable only by the department's Lead.
 
     Args:
@@ -528,7 +529,7 @@ def log_to_common_knowledge(
     if level == "department":
         from lab.sandbox import CommonKnowledgeHub
 
-        hub = CommonKnowledgeHub()
+        hub = CommonKnowledgeHub(run_id=run_id)
         hub.record_finding(department=department, payload=payload)
         hub.save()
         cycle = hub.state.cycle
@@ -557,15 +558,17 @@ def read_all_department_logs(run_id: str = "default") -> dict:
     return {d: _read_log(_log_path(run_id, d, "department")) for d in DEPARTMENTS}
 
 
-def read_common_knowledge() -> dict:
-    """Read the current consolidated state from the central Common Knowledge Hub.
+def read_common_knowledge(run_id: str = "default") -> dict:
+    """Read a run's Common Knowledge from runs/<run_id>/common_knowledge.json.
+
+    Each run (one whole research project, across all its cycles) has its own Common Knowledge.
 
     Returns:
         Dictionary containing current cycle, confirmed facts, hypotheses, best P_net, and verdicts.
     """
     from lab.sandbox import CommonKnowledgeHub
 
-    hub = CommonKnowledgeHub()
+    hub = CommonKnowledgeHub(run_id=run_id)
     return hub.state.to_dict()
 
 

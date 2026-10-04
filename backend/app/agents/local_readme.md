@@ -40,6 +40,7 @@ at the end the user downloads that folder as a zip.
 ```
 runs/<run_id>/
   record.jsonl                      the research record (shared contract)
+  common_knowledge.json             this run's Common Knowledge, across all its cycles
   logs/<department>/department.jsonl   Lead decisions and reports
   logs/<department>/specialist.jsonl   specialist results
   experiments/<experiment_id>/      run.py, results.csv, output.log
@@ -129,8 +130,10 @@ The tools enforce these limits, not just the prompts:
 - `read_all_department_logs` never returns specialist logs.
 
 The functions are in `lab/tools.py`. `log_to_common_knowledge` also records department-level
-entries in the cross-cycle Common Knowledge Hub (`runs/common_knowledge.json`), as before. The
-downloaded zip contains every log, because it is for the user, not for the agents.
+entries in the run's Common Knowledge (`runs/<run_id>/common_knowledge.json`). A run is one whole
+research project across all its cycles, so each run has its own Common Knowledge, and it is in
+that run's zip. The downloaded zip contains every log, because it is for the user, not for the
+agents.
 
 ## Repeated results
 
@@ -237,9 +240,6 @@ its folder.
 Open questions:
 - The Experiment Runner specialist runs code it writes itself. Give it a sandbox in its
   `config.yaml` (`os_env.sandbox`: write only to `runs/`, no network) before enabling it.
-- The Common Knowledge Hub file (`runs/common_knowledge.json`) is shared by all runs, so it is not
-  inside the run folder or the zip. The per-run department logs are. Moving the hub into
-  `runs/<run_id>/` would need a change to `lab/sandbox.py`.
 - Agents pass `run_id` to the record and log tools themselves; it defaults to `"default"`. The
   Director should state the run ID in every task.
 - The shared record has no field for the cycle number or kind for common knowledge. For now the
