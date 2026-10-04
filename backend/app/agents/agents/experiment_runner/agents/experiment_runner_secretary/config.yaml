@@ -1,0 +1,11 @@
+spec_version: 1
+name: experiment_runner_secretary
+description: >-
+  Keeps the Experiment Runner department's log in the lab log database.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md

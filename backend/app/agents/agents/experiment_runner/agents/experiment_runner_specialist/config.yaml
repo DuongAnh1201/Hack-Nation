@@ -1,0 +1,11 @@
+spec_version: 1
+name: experiment_runner_specialist
+description: >-
+  Writes and runs the experiment script, and saves the data as a CSV file.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
