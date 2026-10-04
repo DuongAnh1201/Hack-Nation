@@ -473,3 +473,45 @@ def write_record(kind: str, agent: str, content: dict, based_on: list = None, ru
         f.write(json.dumps(entry) + "\n")
 
     return entry
+
+
+# ---------------------------------------------------------------------------
+# Common Knowledge Hub Integration
+# ---------------------------------------------------------------------------
+
+def log_to_common_knowledge(department: str, payload: dict) -> dict:
+    """Record an accepted scientific finding, hypothesis, or verdict into Common Knowledge.
+
+    This updates runs/common_knowledge.json and persists cross-cycle shared memory.
+
+    Args:
+        department: Creating department ('literature', 'hypothesis', 'planning', 'analysis', 'review_safety').
+        payload: Structured dictionary of the finding, hypothesis, or verdict.
+
+    Returns:
+        Confirmation dictionary with updated cycle count and status.
+    """
+    from lab.sandbox import CommonKnowledgeHub
+
+    hub = CommonKnowledgeHub()
+    hub.record_finding(department=department, payload=payload)
+    hub.save()
+    return {
+        "status": "success",
+        "department": department,
+        "cycle": hub.state.cycle,
+        "entry_logged": payload.get("id") or payload.get("title") or payload.get("claim") or "recorded",
+    }
+
+
+def read_common_knowledge() -> dict:
+    """Read the current consolidated state from the central Common Knowledge Hub.
+
+    Returns:
+        Dictionary containing current cycle, confirmed facts, hypotheses, best P_net, and verdicts.
+    """
+    from lab.sandbox import CommonKnowledgeHub
+
+    hub = CommonKnowledgeHub()
+    return hub.state.to_dict()
+

@@ -159,3 +159,25 @@ def test_record_read_write_cycle():
         assert full_rec["by_kind"]["literature"] == 1
         assert full_rec["by_kind"]["hypothesis"] == 2
         assert full_rec["latest_id"] == "H2"
+
+
+def test_common_knowledge_hub_integration(tmp_path, monkeypatch):
+    ck_path = tmp_path / "common_knowledge.json"
+    monkeypatch.chdir(tmp_path)
+
+    # Log from literature secretary
+    l_res = tools.log_to_common_knowledge("literature", {"id": "F1", "statement": "Stanford benchmark achieves 11.83 W/m2 in bench"})
+    assert l_res["status"] == "success"
+    assert l_res["department"] == "literature"
+
+    # Log from hypothesis secretary
+    h_res = tools.log_to_common_knowledge("hypothesis", {"id": "H1", "claim": "SiO2 + Si3N4 on Ag", "status": "proposed"})
+    assert h_res["status"] == "success"
+
+    # Read back common knowledge
+    state = tools.read_common_knowledge()
+    assert state["cycle"] == 1
+    assert len(state["facts"]) >= 1
+    assert "H1" in state["hypotheses"]
+    assert state["hypotheses"]["H1"]["claim"] == "SiO2 + Si3N4 on Ag"
+
