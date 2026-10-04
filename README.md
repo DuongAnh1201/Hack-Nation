@@ -114,11 +114,13 @@ To ensure empirical validity, the Literature Department does not rely on open-we
 
 ## 🧪 Comparison with Other LLM Research Modes
 
-To measure the advantage of Omnigent's structured orchestration against other LLM paradigms, we evaluated standard alternative AI research setups (artifacts attached in `results/llm_comparisons/`):
+To measure the advantage of Omnigent's structured orchestration against other LLM paradigms, we evaluated alternative AI research setups using an identical rigorous research prompt ([Other LLMs Work/prompt.txt](file:///home/koiisme/code/Phys.io/Other%20LLMs%20Work/prompt.txt)), with raw outputs, screenshots, and exported documents committed in [Other LLMs Work/](file:///home/koiisme/code/Phys.io/Other%20LLMs%20Work/) (including **ChatGPT DeepResearch Mode** and **Gemini Research**):
 
 | Research Mode | Architecture | Failure Modes Observed | Success Rate | Epistemic Rigor |
 |---|---|---|---|---|
 | **Omnigent Lab (Ours)** | 22-agent hierarchy, epistemic ledger, sandboxed tools | None; adheres to physics constraints and budget | **90%** | **High** (Traceable `record.jsonl`, validated DOIs) |
+| **ChatGPT DeepResearch Mode** | Deep research multi-step agent without physics execution sandbox | Hallucinates non-standard optical constants without TMM simulation; theoretical designs fail numerical verification | 20% | **Medium** (Long literature report, but no verified simulator loop) |
+| **Gemini Research Mode** | Web-grounded single agent prompt | Recommends generic dielectric stacks; fails to converge on optimal nanometer thicknesses | 10% | **Medium** (Cites papers, lacks iterative coordinate tuning) |
 | **Single-Prompt Zero-Shot** | Single GPT-4o / Claude 3.5 prompt | Proposes unphysical thicknesses (<1 nm or >10,000 nm); invents materials | 0% | **None** (No simulation loop) |
 | **Unconstrained AutoGPT Loop** | Autonomous loop without strict policies | Exceeds evaluation budget; infinite loops on repeated materials; context drift | 10% | **Low** (No structured epistemic labels) |
 | **Naive Agent Search (Ablated)**| Multi-agent without analyst critique | Random material generation; fails to converge on dielectric contrast | 0% | **Medium** (Logs data, but lacks directional learning) |
