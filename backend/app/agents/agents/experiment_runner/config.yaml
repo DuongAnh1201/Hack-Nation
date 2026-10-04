@@ -1,0 +1,16 @@
+spec_version: 1
+name: experiment_runner
+description: >-
+  Decides whether an experiment ran as planned and its data is accepted as a result.
+
+executor:
+  type: omnigent
+  config:
+    harness: claude-sdk
+
+instructions: prompt.md
+
+tools:
+  agents:
+    - experiment_runner_specialist
+    - experiment_runner_secretary
