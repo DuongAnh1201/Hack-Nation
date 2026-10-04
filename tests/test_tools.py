@@ -1,5 +1,6 @@
 """Tests for lab function tools (lab/tools.py)."""
 
+import json
 import os
 import tempfile
 import pytest
@@ -324,6 +325,8 @@ def test_run_experiment_runs_agent_code_and_saves_output_log(tmp_path, monkeypat
 
     assert out["exit_code"] == 0 and out["timed_out"] is False
     assert out["rows"] == 1
+    live = [json.loads(line) for line in (exp_dir / "evaluations.jsonl").read_text().splitlines()]
+    assert len(live) == 1 and live[0]["p_net_w_m2"] is not None and "solar_reflectance" in live[0]
     assert "p_net" in (exp_dir / "output.log").read_text()
     assert (exp_dir / "run.py").read_text() == script_before
 

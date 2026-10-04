@@ -63,6 +63,61 @@ disk). `package_run` exists in `lab/tools.py`, but no agent has it yet and the D
 does not mention the zip: until it does, make the zip by hand with
 `python -c "from lab.tools import package_run; print(package_run('<run_id>'))"`.
 
+## Website: live lab
+
+Section 06 of the website (`frontend/index.html`, "Live lab") lets a user type a problem statement,
+start a run, watch the agents, see the experiments charted and download the run as a zip. The
+backend routes are in `backend/app/api/live.py` (`/api/lab/...`). The backend never makes a
+scientific decision: it starts the Lab Director with the problem statement and reads files and
+Omnigent's session history.
+
+| Part of the page | Where the data comes from |
+|---|---|
+| Start run | `POST /api/lab/runs` writes `runs/<run_id>/problem.json`, opens a new interactive Omnigent session (`omni run backend/app/agents`) in a hidden tmux window, and types `Run ID: <run_id>. Cycles: up to <n>. Problem statement from the user: …`. Not `omni run -p`, which stops the run after the Director's first turn |
+| Agents and activity | Omnigent's session tree (Director, Leads, specialists, secretaries) with every message and tool call, merged with `record.jsonl` and both log levels, ordered by time. Polled every 3 s while the run is active |
+| Charts | Live: `run_experiment` points the simulator's ledger at `experiments/<id>/evaluations.jsonl`, so every `simulate_stack` call appears as it happens. Final: `results.csv` once the experiment finishes. The dashed line and red ring are the Stanford control from `results/control.json` |
+| Report | `final_report.md`, or the latest `knowledge/cycle_<n>.md` |
+| Download zip | `GET /api/lab/runs/<run_id>/download`: the whole run folder |
+
+**Watchdog (stalled runs).** A Lead often ends its turn while its specialist is still working
+("waiting for the specialist"). Omnigent then tells the Director the Lead finished, and when the
+Lead later completes its decision (woken by its specialist, not by the Director), the Director is
+never notified: every agent goes idle and the run stalls (seen twice in run `pdrc-01`). The backend
+checks active runs every 20 s. When all agents are idle and a department logged a decision at least
+45 s ago, after the Director's last action, it types one note into the Director's session:
+`[Lab runtime] The <department> department logged its decision (<entry id>) … Read the department
+logs … then continue the run.` One note per log entry; each is saved in `runs/<run_id>/runtime.jsonl`
+and shown in the activity feed as `lab runtime`. It reports a fact the Director can check; it
+never decides what happens next.
+
+The page finds the backend by itself: the same address first (when the backend serves the site),
+then the Render backend. `?api=<url>` forces a backend and `?run=<run_id>` opens a run.
+
+**Live demo on your laptop** (agents need Omnigent and your Claude credentials):
+
+```bash
+source .venv/bin/activate
+export PYTHONPATH="$PWD"
+omni start
+cd backend
+LAB_ALLOW_START=1 LAB_ACCESS_CODE=<code> uvicorn app.main:app --port 8000
+```
+
+Open `http://localhost:8000/` (the backend serves the website too) and scroll to "Live lab".
+
+**Judges starting runs from their own browser:** expose the same backend with a tunnel while your
+laptop is on, e.g. `cloudflared tunnel --url http://localhost:8000` (`brew install cloudflared`),
+and give them the printed `https://….trycloudflare.com` address and the access code. Site and API
+then share one address, so no CORS setup is needed.
+
+Safety limits for a public link: starting and stopping need `LAB_ACCESS_CODE`, only one run can be
+active at a time, run IDs are restricted to letters, digits, `-` and `_`, and agent text is shown
+as plain text, never as HTML.
+
+**Public site without your laptop** (Vercel + Render): the same page, with "Start run" disabled.
+It shows runs whose folders are on the Render backend. `runs/` is git-ignored, so to publish a
+finished demo run, force-add it (`git add -f runs/<run_id>`) or copy it to the server.
+
 ## Decision ownership
 
 - **The specialist** investigates and advises. It returns its result to the Lead and writes nothing
@@ -459,6 +514,15 @@ or code. Reference them as `${VAR}` in agent configs.
 ## Change log
 
 Newest first.
+
+- **Watchdog for stalled runs.** The backend tells the Director when a department logged a decision
+  it was not notified about, once per log entry. See "Website: live lab".
+
+- **Website live lab.** Section 06 of `frontend/index.html` and `backend/app/api/live.py`: problem
+  statement box, agent activity feed, live experiment charts, report and zip download. The backend
+  serves the website at `/`. Every simulation inside `run_experiment` is now also written to
+  `experiments/<id>/evaluations.jsonl` (with reflectance and emissivity), so charts update during a
+  run. See "Website: live lab".
 
 - **Sandboxed file access for six agents.** Tonight's runs showed that no agent had file or shell
   tools, so the Experiment Runner could not write `run.py` and Knowledge & Memory could not write

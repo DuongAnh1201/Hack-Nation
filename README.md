@@ -142,7 +142,7 @@ pytest
 python -m lab.physics --control
 omni run ./lab/
 python bench/run_all.py --seeds 10 --budget 2000
-(cd frontend && python -m http.server 8000)
+(cd backend && uvicorn app.main:app --port 8000)   # API + website at http://localhost:8000/
 (cd technology && npm install && npm run dev)
 ```
 

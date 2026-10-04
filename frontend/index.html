@@ -210,6 +210,75 @@ video.tc{position:fixed;z-index:6;left:50%;top:calc(8px + env(safe-area-inset-to
   .ctitle{top:56%}
 }
 @media (prefers-reduced-motion:reduce){.typed .cur{animation:none}}
+
+/* Live lab (section 06): normal-flow section after the story; not one of the camera scenes. */
+.live{background:#000;padding:96px 16px 72px;border-top:1px solid var(--frame)}
+.live-wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.live-head{display:grid;gap:10px}
+.live-sub{margin:0;max-width:78ch;font-size:10.5px;line-height:1.7;letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+.live-conn{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.live-conn b{font-weight:400;color:var(--fg)}
+.live-grid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr);gap:16px}
+.live-card{padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.live-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.live-row[hidden]{display:none}
+.nocase{text-transform:none}
+.live textarea,.live select,.live input[type=password]{font:11.5px/1.6 var(--mono);color:var(--fg);background:rgba(0,0,0,.45);border:1px solid var(--frame);padding:10px 12px;border-radius:0;min-width:0}
+.live select,.live input[type=password]{padding:0 10px;min-height:34px}
+.live textarea{resize:vertical;min-height:132px}
+.live textarea:focus-visible,.live select:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.live .btn{display:inline-flex;align-items:center;text-decoration:none}
+.live .btn[disabled],.live .btn.off{opacity:.38;cursor:not-allowed;pointer-events:none}
+.btn-red{border-color:var(--red);background:rgba(227,67,58,.22)}
+.btn-red:hover{background:rgba(227,67,58,.38)}
+.live-note{font-size:10px;line-height:1.6;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);min-height:16px}
+.live-note.err{color:var(--red)}
+.live-sep{height:1px;background:var(--frame);margin:4px 0}
+.live-meta{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.live-meta b{font-weight:400;color:var(--fg);text-transform:none;overflow-wrap:anywhere}
+.live-agents{display:flex;flex-wrap:wrap;gap:6px}
+.live-chip{font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--frame);color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+.live-chip i{width:6px;height:6px;border-radius:50%;background:var(--dim);display:inline-block}
+.live-chip.running i{background:var(--green)}
+.live-chip.error i{background:var(--red)}
+.live-feed{list-style:none;margin:0;padding:0;height:440px;overflow:auto;font-size:11px;line-height:1.55;border-top:1px solid var(--frame);overscroll-behavior:contain}
+.live-feed li{display:grid;grid-template-columns:64px 210px minmax(0,1fr);gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.live-feed .tm{color:var(--dim);font-variant-numeric:tabular-nums}
+.live-feed .who{display:flex;flex-direction:column;gap:2px;min-width:0}
+.live-feed .ag{text-transform:uppercase;letter-spacing:.06em;font-size:10px;overflow-wrap:anywhere}
+.live-feed .kd{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.live-feed .tx{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--fg);max-height:9.3em;overflow:hidden}
+.live-feed li.tool .tx,.live-feed li.result .tx{color:var(--muted)}
+.live-feed li.rec .kd{color:var(--amber)}
+.live-feed li.live-empty{display:block;color:var(--dim);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:14px 0}
+.live-path{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);min-height:18px}
+.live-path b{font-weight:400;padding:3px 7px;border:1px solid var(--frame)}
+.live-depts{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.live-dept{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--frame);border-top:2px solid var(--c,var(--frame));background:rgba(0,0,0,.35);min-width:0}
+.live-dept:hover,.live-dept.sel{background:rgba(255,255,255,.05)}
+.live-dept.sel{outline:1px solid var(--c)}
+.live-dept:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.live-dept.waiting{opacity:.45}
+.live-dept .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.live-dept .nm{font-family:var(--display);font-size:20px;font-weight:300;text-transform:uppercase;letter-spacing:.02em;color:var(--fg)}
+.live-dept .st{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.live-dept.working .st{color:var(--green)}
+.live-dept.working .st::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:1px;animation:blink 1.2s steps(1) infinite}
+.live-dept.error .st{color:var(--red)}
+.live-dept .role{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;font-size:10.5px;line-height:1.45}
+.live-dept .role>span:first-child{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding-top:1px}
+.live-dept .act{color:var(--fg);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.live-dept .act em{font-style:normal;color:var(--muted)}
+.live-dept .ft{display:flex;gap:12px;flex-wrap:wrap;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);border-top:1px solid rgba(255,255,255,.06);padding-top:6px}
+.live-charts{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px}
+.live-charts .chartbox{height:340px}
+.live-report pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;max-height:380px;overflow:auto;font:11px/1.65 var(--mono);color:var(--fg)}
+.live svg text{font-family:var(--mono)}
+@media (max-width:900px){
+  .live-grid,.live-charts{grid-template-columns:1fr}
+  .live-feed li{grid-template-columns:52px minmax(0,1fr)}
+  .live-feed .tx{grid-column:2}
+}
 </style>
 </head>
 <body>
@@ -269,7 +338,7 @@ video.tc{position:fixed;z-index:6;left:50%;top:calc(8px + env(safe-area-inset-to
 
 <div class="hud" aria-hidden="false">
   <div class="tl"><span>Phys.io-autonomous-lab</span><span class="x"><b>X-3</b></span><span class="x"></span><span class="x"></span><span>Cycle</span><span><b id="hCycle">• 0001</b></span><span class="x">Time</span><span class="x"><b id="hTime">• --</b></span></div>
-  <div class="tr"><a href="#s-speed">Results</a> / <a href="#s-q">The question</a></div>
+  <div class="tr"><a href="#s-live">Live lab</a> / <a href="#s-speed">Results</a> / <a href="#s-q">The question</a></div>
   <div class="bl"><span>Discovery loop: <span class="on">active</span></span><span>Control check: <span class="on">passed</span></span></div>
   <div class="br">Human gate: <span class="on">armed</span></div>
 </div>
@@ -390,6 +459,69 @@ video.tc{position:fixed;z-index:6;left:50%;top:calc(8px + env(safe-area-inset-to
         <div class="rows" id="rows"></div>
         <div class="next"><b>Next experiment</b>Run the agent lab on the same 20 seeds, target and budget, plus an ablation without shared memory. Then fabricate the best design and measure it outdoors against Stanford's.</div>
         <div class="giant" aria-hidden="true"><svg viewBox="-10 -10 560 150"><use href="#word" width="560" height="150" x="-10" y="-10" style="fill:none;stroke:#fff;stroke-width:17;stroke-linecap:round;stroke-linejoin:round"/></svg></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene live" id="s-live" aria-label="Live lab">
+    <div class="live-wrap">
+      <header class="live-head">
+        <div class="kicker">06 · Live lab</div>
+        <h2 class="h2">Give the lab a problem. Watch it work.</h2>
+        <p class="live-sub">The agents run in Omnigent on the lab machine. Every message, tool call, record and log below comes from the run itself; nothing is scripted.</p>
+        <div class="live-conn" id="liveConn" role="status">Connecting to the lab…</div>
+      </header>
+      <div class="live-grid">
+        <div class="glass live-card">
+          <label class="lab-label" for="liveProblem">Problem statement</label>
+          <textarea id="liveProblem" data-lenis-prevent spellcheck="true">Design a passive daytime radiative-cooling coating of at most 5 layers, using only SiO2, Al2O3, Si3N4, TiO2 or MgF2 on Ag or Al, whose net cooling power beats the Stanford 7-layer control in our simulator (11.83 W/m²).</textarea>
+          <div class="live-row" id="liveCodeRow" hidden>
+            <label class="lab-label" for="liveCode">Access code</label>
+            <input id="liveCode" type="password" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="live-row">
+            <label class="lab-label" for="liveCycles">Cycles</label>
+            <select id="liveCycles"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+            <button class="btn btn-red" id="liveStart" type="button">Start run</button>
+          </div>
+          <div class="live-note" id="liveNote" role="status"></div>
+          <div class="live-sep"></div>
+          <label class="lab-label" for="liveRun">Run</label>
+          <select id="liveRun"></select>
+          <div class="live-row">
+            <a class="btn off" id="liveDownload" href="#" download>Download zip</a>
+            <button class="btn" id="liveStop" type="button" disabled>Stop run</button>
+          </div>
+          <div class="live-meta" id="liveMeta"></div>
+        </div>
+        <div class="glass live-card">
+          <div class="live-row" style="justify-content:space-between">
+            <span class="lab-label">Agents and activity</span>
+            <span class="live-row">
+              <label class="lab-label" for="liveFilter">Show</label>
+              <select id="liveFilter"><option value="">All agents</option></select>
+              <label class="lab-label"><input type="checkbox" id="liveFollow" checked> Follow</label>
+            </span>
+          </div>
+          <div class="live-agents" id="liveAgents"></div>
+          <ol class="live-feed" id="liveFeed" data-lenis-prevent></ol>
+        </div>
+      </div>
+      <div class="glass live-card">
+        <div class="live-row" style="justify-content:space-between">
+          <span class="lab-label">Departments · what each agent is doing</span>
+          <span class="lab-label">Click a department to filter the activity</span>
+        </div>
+        <div class="live-path" id="livePath" aria-label="Order in which the Lab Director called departments"></div>
+        <div class="live-depts" id="liveDepts"></div>
+      </div>
+      <div class="live-charts">
+        <div class="glass chartbox"><span class="lab-label">Net cooling power of every simulated design · dashed: Stanford control in our simulator</span><svg id="liveChartP" viewBox="0 0 640 300" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Net cooling power of each simulated design"></svg></div>
+        <div class="glass chartbox"><span class="lab-label">Solar reflectance vs 8–13 <span class="nocase">µm</span> emissivity · up and right is better</span><svg id="liveChartRE" viewBox="0 0 520 300" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Solar reflectance against window emissivity for each design"></svg></div>
+      </div>
+      <div class="glass live-card live-report">
+        <span class="lab-label" id="liveReportLabel">Report</span>
+        <pre id="liveReport" data-lenis-prevent></pre>
       </div>
     </div>
   </section>
@@ -965,6 +1097,356 @@ function frame(now){
   renderer.render(scene, camera);
 }
 requestAnimationFrame(frame);
+})();
+</script>
+
+<script>
+/* Live lab (section 06). Finds the lab backend, starts runs from the problem statement, and polls
+   the run's activity, experiments and report. Agent text is always inserted as text, never HTML. */
+(() => {
+  const RENDER_API = 'https://physics-study-api-7twp.onrender.com';
+  const $ = id => document.getElementById(id);
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const el = {
+    conn: $('liveConn'), problem: $('liveProblem'), cycles: $('liveCycles'), start: $('liveStart'),
+    note: $('liveNote'), run: $('liveRun'), dl: $('liveDownload'), stop: $('liveStop'), meta: $('liveMeta'),
+    filter: $('liveFilter'), follow: $('liveFollow'), agents: $('liveAgents'), feed: $('liveFeed'),
+    chartP: $('liveChartP'), chartRE: $('liveChartRE'), report: $('liveReport'), reportLabel: $('liveReportLabel'),
+    codeRow: $('liveCodeRow'), code: $('liveCode'),
+  };
+  let API = null, status = null, runId = null, timer = null, lastEvents = [];
+
+  const fmtTime = t => t ? new Date(t * 1000).toLocaleTimeString([], {hour12: false}) : '';
+  const note = (text, err) => { el.note.textContent = text || ''; el.note.classList.toggle('err', !!err); };
+  const PALETTE = ['#7c6cff', '#ff9a3c', '#39d98a', '#e3433a', '#4fc3f7', '#f06292', '#c0ca33'];
+  const DEPTS = ['lab_director', 'literature', 'hypothesis', 'planning', 'experiment_runner', 'analysis', 'review_safety', 'knowledge_memory'];
+  const agentColor = a => { const i = DEPTS.findIndex(d => (a || '').startsWith(d)); return i < 0 ? '#8b9196' : PALETTE[i % PALETTE.length]; };
+
+  async function api(path, opts = {}) {
+    const r = await fetch(API + path, {cache: 'no-store', ...opts});
+    let body = null; try { body = await r.json(); } catch (e) { /* not JSON */ }
+    if (!r.ok) throw new Error((body && body.detail) || ('HTTP ' + r.status));
+    return body;
+  }
+
+  async function findApi() {
+    const q = new URLSearchParams(location.search).get('api');
+    const candidates = q ? [q.replace(/\/$/, '')] : (location.protocol.startsWith('http') ? ['', RENDER_API] : [RENDER_API]);
+    for (const base of candidates) {
+      try {
+        const r = await fetch(base + '/api/lab/status', {cache: 'no-store'});
+        if (r.ok) { API = base; return await r.json(); }
+      } catch (e) { /* try the next one */ }
+    }
+    return null;
+  }
+
+  function renderStatus() {
+    el.conn.textContent = '';
+    if (!status) { el.conn.textContent = 'Lab backend not reachable. Runs cannot be shown.'; el.start.disabled = true; return; }
+    const where = API ? API.replace(/^https?:\/\//, '') : 'this server';
+    el.conn.append('Connected to ', Object.assign(document.createElement('b'), {textContent: where}), ' · ');
+    if (status.can_start) {
+      el.conn.append(Object.assign(document.createElement('b'), {textContent: 'live runs on'}));
+      if (status.active_runs && status.active_runs.length) el.conn.append(' · running: ' + status.active_runs.join(', '));
+    } else {
+      el.conn.append('live runs off here: finished runs only');
+    }
+    el.start.disabled = !status.can_start;
+    el.codeRow.hidden = !(status.can_start && status.needs_code);
+    if (!status.can_start) note(status.reasons && status.reasons[0]);
+  }
+
+  async function loadRuns(select) {
+    const runs = await api('/api/lab/runs');
+    el.run.textContent = '';
+    if (!runs.length) { el.run.append(new Option('No runs yet', '')); return; }
+    for (const r of runs) {
+      const label = `${r.id}${r.running ? ' · running' : ''} · ${r.records} records · ${r.experiments} experiments`;
+      el.run.append(new Option(label, r.id));
+    }
+    const want = select || new URLSearchParams(location.search).get('run') || runs[0].id;
+    el.run.value = runs.some(r => r.id === want) ? want : runs[0].id;
+    choose(el.run.value);
+  }
+
+  function choose(id) {
+    runId = id || null; lastEvents = [];
+    el.feed.textContent = ''; el.agents.textContent = '';
+    el.dl.classList.toggle('off', !runId);
+    el.dl.href = runId ? `${API}/api/lab/runs/${encodeURIComponent(runId)}/download` : '#';
+    refresh();
+  }
+
+  function renderAgents(agents, events) {
+    el.agents.textContent = '';
+    const names = new Set(agents.map(a => a.agent).concat(events.map(e => e.agent)).filter(Boolean));
+    for (const a of agents) {
+      const chip = document.createElement('span');
+      chip.className = 'live-chip' + (a.error ? ' error' : (a.status && a.status !== 'idle' ? ' running' : ''));
+      chip.style.borderColor = agentColor(a.agent);
+      chip.title = a.error ? `Error: ${typeof a.error === 'string' ? a.error : JSON.stringify(a.error)}` : (a.status || '');
+      chip.append(document.createElement('i'), a.agent.replace(/_/g, ' '));
+      el.agents.append(chip);
+    }
+    const current = el.filter.value;
+    el.filter.textContent = '';
+    el.filter.append(new Option('All agents', ''));
+    const depts = [...new Set([...names].map(deptOf).filter(Boolean))];
+    for (const d of DEPT_INFO.map(x => x[0]).filter(x => depts.includes(x))) el.filter.append(new Option(`${DEPT_NAME[d]} (department)`, 'dept:' + d));
+    for (const n of [...names].sort()) el.filter.append(new Option(n.replace(/_/g, ' '), n));
+    el.filter.value = [...el.filter.options].some(o => o.value === current) ? current : '';
+  }
+
+  const DEPT_INFO = [['lab_director', 'Lab Director'], ['literature', 'Literature'], ['hypothesis', 'Hypothesis'], ['planning', 'Planning'],
+    ['experiment_runner', 'Experiment Runner'], ['analysis', 'Analysis'], ['review_safety', 'Review & Safety'], ['knowledge_memory', 'Knowledge & Memory']];
+  const DEPT_NAME = Object.fromEntries(DEPT_INFO);
+  const deptOf = a => {
+    if (!a) return null;
+    if (a === 'lab_director') return a;
+    const hit = DEPT_INFO.slice(1).map(d => d[0]).sort((x, y) => y.length - x.length).find(d => a === d || a.startsWith(d + '_'));
+    return hit || null;
+  };
+  const roleOf = (a, d) => d === 'lab_director' ? 'Director' : a.endsWith('_specialist') ? 'Specialist' : a.endsWith('_secretary') ? 'Secretary' : 'Lead';
+  const ago = t => { const s = Math.max(0, Date.now() / 1000 - t); return s < 60 ? `${Math.round(s)} s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`; };
+  const describe = e => {
+    if (e.kind === 'tool_call') {
+      let args = {}; try { args = JSON.parse(e.text); } catch (x) { /* truncated */ }
+      const target = args.agent ? ` → ${args.agent}` : args.url ? ` ${args.url}` : args.query ? ` "${args.query}"` : '';
+      return ['called ', `${e.tool}${target}`];
+    }
+    if (e.kind === 'tool_result') return ['got a result: ', e.text];
+    if (e.kind === 'record') return ['wrote record ', e.text];
+    if (e.kind.startsWith('log:')) return [`logged (${e.kind.slice(4)}) `, e.text];
+    if (e.kind === 'message:user') return ['received: ', e.text];
+    return ['said: ', e.text];
+  };
+
+  function renderPath(events) {
+    el.path = el.path || $('livePath');
+    const path = [];
+    for (const e of events) {
+      if (e.agent !== 'lab_director' || e.tool !== 'sys_session_send') continue;
+      let args = {}; try { args = JSON.parse(e.text); } catch (x) { const m = /"agent":\s*"([a-z_]+)"/.exec(e.text); if (m) args.agent = m[1]; }
+      if (args.agent && path[path.length - 1] !== args.agent) path.push(args.agent);
+    }
+    el.path.textContent = '';
+    el.path.append('Path: ', Object.assign(document.createElement('b'), {textContent: 'Lab Director'}));
+    for (const d of path) {
+      el.path.append(' → ');
+      const b = Object.assign(document.createElement('b'), {textContent: DEPT_NAME[d] || d});
+      b.style.borderColor = agentColor(d); el.path.append(b);
+    }
+    if (!path.length) el.path.append(' · no department called yet');
+  }
+
+  function renderDepts(act) {
+    el.depts = el.depts || $('liveDepts');
+    el.depts.textContent = '';
+    const sessions = {};
+    for (const a of act.agents) { const d = deptOf(a.agent); if (d) (sessions[d] = sessions[d] || []).push(a); }
+    for (const [d, label] of DEPT_INFO) {
+      const evs = act.events.filter(e => deptOf(e.agent) === d);
+      const ss = sessions[d] || [];
+      let state = ss.some(s => s.error) ? 'error' : ss.some(s => s.status && s.status !== 'idle') ? 'working' : evs.length ? 'done' : 'waiting';
+      // The Director goes idle while a department works; it is waiting, not done, until the run ends.
+      if (d === 'lab_director' && state === 'done' && act.running) state = 'directing';
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = `live-dept ${state}` + (el.filter.value === 'dept:' + d ? ' sel' : '');
+      card.style.setProperty('--c', agentColor(d));
+      const hd = Object.assign(document.createElement('div'), {className: 'hd'});
+      hd.append(Object.assign(document.createElement('span'), {className: 'nm', textContent: label}),
+        Object.assign(document.createElement('span'), {className: 'st', textContent: {waiting: 'waiting', working: 'working', done: 'done', error: 'error', directing: 'waiting for a department'}[state]}));
+      card.append(hd);
+      const roles = d === 'lab_director' ? ['Director'] : ['Lead', 'Specialist', 'Secretary'];
+      for (const role of roles) {
+        const last = [...evs].reverse().find(e => roleOf(e.agent, d) === role);
+        const row = Object.assign(document.createElement('div'), {className: 'role'});
+        const actEl = Object.assign(document.createElement('span'), {className: 'act'});
+        if (last) {
+          const [verb, what] = describe(last);
+          actEl.append(Object.assign(document.createElement('em'), {textContent: `${ago(last.t)} · ${verb}`}), what);
+        } else {
+          actEl.append(Object.assign(document.createElement('em'), {textContent: 'not started'}));
+        }
+        row.append(Object.assign(document.createElement('span'), {textContent: role}), actEl);
+        card.append(row);
+      }
+      const err = ss.find(s => s.error);
+      if (err) card.append(Object.assign(document.createElement('div'), {className: 'role', textContent: `Error: ${typeof err.error === 'string' ? err.error : JSON.stringify(err.error)}`}));
+      const ft = Object.assign(document.createElement('div'), {className: 'ft'});
+      const n = k => evs.filter(e => e.kind === k || (k === 'log' && e.kind.startsWith('log:'))).length;
+      const cost = ss.reduce((s, a) => s + (a.cost_usd || 0), 0);
+      ft.append(`${n('tool_call')} tool calls`, ` · ${n('record')} records`, ` · ${n('log')} log entries`);
+      if (cost) ft.append(` · $${cost.toFixed(2)}`);
+      card.append(ft);
+      card.addEventListener('click', () => { el.filter.value = el.filter.value === 'dept:' + d ? '' : 'dept:' + d; renderFeed(); renderDepts(act); });
+      el.depts.append(card);
+    }
+  }
+
+  function renderFeed() {
+    const only = el.filter.value;
+    const rows = lastEvents.filter(e => !only || (only.startsWith('dept:') ? deptOf(e.agent) === only.slice(5) : e.agent === only));
+    el.feed.textContent = '';
+    if (!rows.length) { const li = document.createElement('li'); li.className = 'live-empty'; li.textContent = runId ? 'No activity yet.' : 'Choose or start a run.'; el.feed.append(li); return; }
+    for (const e of rows) {
+      const li = document.createElement('li');
+      li.className = e.kind === 'tool_call' ? 'tool' : e.kind === 'tool_result' ? 'result' : e.kind === 'record' ? 'rec' : '';
+      const tm = Object.assign(document.createElement('span'), {className: 'tm', textContent: fmtTime(e.t)});
+      const who = Object.assign(document.createElement('span'), {className: 'who'});
+      const ag = Object.assign(document.createElement('span'), {className: 'ag', textContent: (e.agent || '').replace(/_/g, ' ')});
+      ag.style.color = agentColor(e.agent);
+      const kd = Object.assign(document.createElement('span'), {className: 'kd', textContent: e.tool ? `tool · ${e.tool}` : e.kind.replace(':', ' · ')});
+      who.append(ag, kd);
+      const tx = Object.assign(document.createElement('span'), {className: 'tx', textContent: e.text});
+      li.append(tm, who, tx);
+      el.feed.append(li);
+    }
+    if (el.follow.checked) el.feed.scrollTop = el.feed.scrollHeight;
+  }
+
+  function svg(tag, attrs, text) {
+    const n = document.createElementNS(svgNS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  const tick = (v, span, int) => int ? String(Math.round(v)) : span >= 20 ? v.toFixed(0) : span >= 2 ? v.toFixed(1) : v.toFixed(2);
+  function axes(root, W, H, m, xs, ys, xLabel, yLabel, xInt) {
+    const X = v => m.l + (v - xs[0]) / (xs[1] - xs[0] || 1) * (W - m.l - m.r);
+    const Y = v => H - m.b - (v - ys[0]) / (ys[1] - ys[0] || 1) * (H - m.t - m.b);
+    for (let k = 0; k <= 4; k++) {
+      const vy = ys[0] + (ys[1] - ys[0]) * k / 4, vx = xs[0] + (xs[1] - xs[0]) * k / 4;
+      root.append(svg('line', {x1: m.l, x2: W - m.r, y1: Y(vy), y2: Y(vy), stroke: '#1d2226'}));
+      root.append(svg('text', {x: m.l - 6, y: Y(vy) + 3, 'text-anchor': 'end', 'font-size': 9, fill: '#8b9196'}, tick(vy, ys[1] - ys[0])));
+      if (!xInt) root.append(svg('text', {x: X(vx), y: H - m.b + 14, 'text-anchor': 'middle', 'font-size': 9, fill: '#8b9196'}, tick(vx, xs[1] - xs[0])));
+    }
+    if (xInt) {
+      const step = Math.max(1, Math.ceil((xs[1] - xs[0]) / 5));
+      for (let v = xs[0]; v <= xs[1]; v += step) root.append(svg('text', {x: X(v), y: H - m.b + 14, 'text-anchor': 'middle', 'font-size': 9, fill: '#8b9196'}, String(v)));
+    }
+    root.append(svg('text', {x: W - m.r, y: H - 4, 'text-anchor': 'end', 'font-size': 9, fill: '#4f565b'}, xLabel));
+    root.append(svg('text', {x: m.l, y: m.t - 6, 'font-size': 9, fill: '#4f565b'}, yLabel));
+    return {X, Y};
+  }
+  function emptyChart(root, W, H, text) { root.textContent = ''; root.append(svg('text', {x: W / 2, y: H / 2, 'text-anchor': 'middle', 'font-size': 11, fill: '#4f565b'}, text)); }
+
+  // A finished experiment uses its results.csv; a running one uses the simulator's live ledger.
+  function pointsOf(ex) {
+    if (ex.finished && ex.rows.length) return ex.rows;
+    return (ex.evaluations || []).map(e => ({
+      design_id: `evaluation ${e.evaluation}`, materials: e.materials, thicknesses_nm: e.thicknesses_nm || [],
+      substrate: e.substrate, p_net_w_m2: e.p_net_w_m2, solar_reflectance: e.solar_reflectance,
+      window_emissivity: e.window_emissivity, valid: e.valid, reason: e.valid ? 'ok' : 'invalid design',
+    }));
+  }
+
+  function renderCharts(data) {
+    const pts = [];
+    data.experiments.forEach((ex, i) => pointsOf(ex).forEach(r => pts.push({...r, ex: ex.experiment_id + (ex.finished ? '' : ' (running)'), color: PALETTE[i % PALETTE.length]})));
+    const ctl = data.control || {};
+    const valid = pts.filter(p => p.p_net_w_m2 != null);
+    if (!valid.length) {
+      emptyChart(el.chartP, 640, 300, 'No experiment data yet');
+      emptyChart(el.chartRE, 520, 300, 'No experiment data yet');
+      return;
+    }
+    // Cooling power per simulated design, in run order.
+    let root = el.chartP; root.textContent = '';
+    const ys = valid.map(p => p.p_net_w_m2).concat(ctl.p_net_w_m2 != null ? [ctl.p_net_w_m2] : []);
+    let lo = Math.min(...ys, 0), hi = Math.max(...ys); const pad = (hi - lo) * .08 || 1; lo -= pad; hi += pad;
+    let A = axes(root, 640, 300, {l: 44, r: 14, t: 18, b: 26}, [1, Math.max(2, valid.length)], [lo, hi], 'design, in run order', 'W/m²', true);
+    if (ctl.p_net_w_m2 != null) {
+      root.append(svg('line', {x1: 44, x2: 626, y1: A.Y(ctl.p_net_w_m2), y2: A.Y(ctl.p_net_w_m2), stroke: '#e3433a', 'stroke-dasharray': '5 4'}));
+      root.append(svg('text', {x: 626, y: A.Y(ctl.p_net_w_m2) - 5, 'text-anchor': 'end', 'font-size': 9, fill: '#e3433a'}, `Stanford control ${ctl.p_net_w_m2.toFixed(2)}`));
+    }
+    valid.forEach((p, i) => {
+      const c = svg('circle', {cx: A.X(i + 1), cy: A.Y(p.p_net_w_m2), r: p.valid ? 3.4 : 2.6, fill: p.valid ? p.color : 'none', stroke: p.color, 'stroke-opacity': p.valid ? 1 : .6});
+      c.append(svg('title', {}, `${p.ex} · ${p.design_id}\n${(p.materials || []).join(' / ')} on ${p.substrate}\n${(p.thicknesses_nm || []).join(' / ')} nm\n${p.p_net_w_m2.toFixed(2)} W/m²${p.valid ? '' : ' · invalid: ' + p.reason}`));
+      root.append(c);
+    });
+    // Reflectance vs emissivity.
+    root = el.chartRE; root.textContent = '';
+    const re = pts.filter(p => p.solar_reflectance != null && p.window_emissivity != null);
+    const rmin = Math.min(...re.map(p => p.solar_reflectance), ctl.solar_reflectance ?? 1, .9);
+    A = axes(root, 520, 300, {l: 44, r: 14, t: 18, b: 26}, [0, 1], [Math.max(0, rmin - .01), 1], '8–13 µm emissivity', 'solar reflectance');
+    re.forEach(p => {
+      const c = svg('circle', {cx: A.X(p.window_emissivity), cy: A.Y(p.solar_reflectance), r: 3.2, fill: p.valid ? p.color : 'none', stroke: p.color});
+      c.append(svg('title', {}, `${p.ex} · ${p.design_id}: R ${p.solar_reflectance.toFixed(3)}, ε ${p.window_emissivity.toFixed(3)}`));
+      root.append(c);
+    });
+    if (ctl.solar_reflectance != null) {
+      root.append(svg('circle', {cx: A.X(ctl.window_emissivity), cy: A.Y(ctl.solar_reflectance), r: 6, fill: 'none', stroke: '#e3433a', 'stroke-width': 1.5}));
+      root.append(svg('text', {x: A.X(ctl.window_emissivity) + 9, y: A.Y(ctl.solar_reflectance) + 3, 'font-size': 9, fill: '#e3433a'}, 'Stanford control'));
+    }
+  }
+
+  function renderMeta(act, data) {
+    el.meta.textContent = '';
+    const add = (k, v) => { el.meta.append(Object.assign(document.createElement('span'), {textContent: k}), Object.assign(document.createElement('b'), {textContent: v})); };
+    add('Status', act.running ? 'running' : 'finished or stopped');
+    if (act.problem) { add('Problem', act.problem.length > 220 ? act.problem.slice(0, 220).trimEnd() + '…' : act.problem); el.meta.lastChild.title = act.problem; }
+    const running = data.experiments.filter(e => !e.finished).length;
+    add('Experiments', `${data.experiments.length}${running ? ` (${running} running)` : ''}`);
+    add('Designs simulated', String(data.experiments.reduce((n, e) => n + pointsOf(e).length, 0)));
+    const best = data.experiments.flatMap(pointsOf).filter(p => p.valid && p.p_net_w_m2 != null).sort((a, b) => b.p_net_w_m2 - a.p_net_w_m2)[0];
+    if (best) add('Best so far', `${best.p_net_w_m2.toFixed(2)} W/m² · ${(best.materials || []).join(' / ')} on ${best.substrate}`);
+    const cost = act.agents.reduce((s, a) => s + (a.cost_usd || 0), 0);
+    if (cost) add('Model cost', `$${cost.toFixed(2)}`);
+    el.stop.disabled = !(act.running && status && status.can_start);
+  }
+
+  async function refresh() {
+    clearTimeout(timer);
+    if (!runId || !API && API !== '') return;
+    const id = runId;
+    try {
+      const [act, data, rep] = await Promise.all([
+        api(`/api/lab/runs/${encodeURIComponent(id)}/activity`),
+        api(`/api/lab/runs/${encodeURIComponent(id)}/experiments`),
+        api(`/api/lab/runs/${encodeURIComponent(id)}/report`),
+      ]);
+      if (id !== runId) return;
+      lastEvents = act.events;
+      renderAgents(act.agents, act.events); renderFeed(); renderPath(act.events); renderDepts(act); renderCharts(data); renderMeta(act, data);
+      el.reportLabel.textContent = rep.file ? `Report · ${rep.file}` : 'Report';
+      el.report.textContent = rep.markdown || 'No report yet. Knowledge & Memory writes one at the end of each cycle.';
+      timer = setTimeout(refresh, act.running ? 3000 : 20000);
+    } catch (e) {
+      note(`Could not load run ${id}: ${e.message}`, true);
+      timer = setTimeout(refresh, 10000);
+    }
+  }
+
+  el.start.addEventListener('click', async () => {
+    const problem = el.problem.value.trim();
+    if (problem.length < 20) { note('Write a problem statement of at least 20 characters.', true); return; }
+    el.start.disabled = true; note('Starting the Lab Director in Omnigent… this takes up to a minute.');
+    try {
+      const res = await api('/api/lab/runs', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Lab-Code': el.code.value},
+        body: JSON.stringify({problem, cycles: Number(el.cycles.value)})});
+      note(`Run ${res.run_id} started. The agents' activity appears below as they work.`);
+      await loadRuns(res.run_id);
+    } catch (e) { note(e.message, true); }
+    finally { el.start.disabled = !(status && status.can_start); }
+  });
+  el.stop.addEventListener('click', async () => {
+    if (!runId) return;
+    el.stop.disabled = true;
+    try { await api(`/api/lab/runs/${encodeURIComponent(runId)}/stop`, {method: 'POST', headers: {'X-Lab-Code': el.code.value}}); note(`Run ${runId} stopped.`); }
+    catch (e) { note(e.message, true); }
+    loadRuns(runId);
+  });
+  el.run.addEventListener('change', () => choose(el.run.value));
+  el.filter.addEventListener('change', () => { renderFeed(); refresh(); });
+
+  (async () => {
+    status = await findApi();
+    renderStatus();
+    if (status) { try { await loadRuns(); } catch (e) { note(e.message, true); } }
+  })();
 })();
 </script>
 
