@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/api/:match*", "destination": "https://physics-study-api-7twp.onrender.com/api/:match*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
