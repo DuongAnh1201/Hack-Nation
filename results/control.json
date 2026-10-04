@@ -1,0 +1,85 @@
+{
+  "design": {
+    "materials": [
+      "SiO2",
+      "HfO2",
+      "SiO2",
+      "HfO2",
+      "SiO2",
+      "HfO2",
+      "SiO2"
+    ],
+    "thicknesses_nm": [
+      230.0,
+      485.0,
+      688.0,
+      13.0,
+      73.0,
+      34.0,
+      54.0
+    ],
+    "substrate": "Ag",
+    "source": "Raman et al., Nature 515, 540-544 (2014), Fig. 1d, top to bottom on 200 nm Ag"
+  },
+  "simulated": {
+    "p_net_w_m2": 11.827773867918992,
+    "solar_reflectance": 0.9770306873212029,
+    "window_emissivity": 0.38572596304914514,
+    "p_rad_w_m2": 119.25984903625529,
+    "p_atm_w_m2": 84.56540067348077,
+    "p_sun_w_m2": 22.86667449485553
+  },
+  "published": {
+    "solar_reflectance": 0.97,
+    "cooling_power_w_m2": 40.1
+  },
+  "gap": {
+    "solar_reflectance": 0.007030687321202933,
+    "p_net_w_m2": -28.27222613208101
+  },
+  "tolerance": {
+    "solar_reflectance_abs": 0.02,
+    "p_net_range_w_m2": [
+      10.0,
+      80.0
+    ]
+  },
+  "checks": {
+    "solar_reflectance": true,
+    "p_net": true
+  },
+  "passed": true,
+  "target_w_m2": 11.827773867918992,
+  "conditions": {
+    "t_ambient_k": 300.0,
+    "sun": "ASTM G173 AM1.5 global, normal incidence",
+    "sky": "analytic-clear-sky-v1",
+    "p_cond_conv": "0 at T = T_ambient"
+  },
+  "target_status": "final",
+  "search_space": {
+    "materials": [
+      "SiO2",
+      "Al2O3",
+      "Si3N4",
+      "TiO2",
+      "MgF2"
+    ],
+    "substrates": [
+      "Ag",
+      "Al"
+    ],
+    "min_layers": 1,
+    "max_layers": 5,
+    "thickness_bounds_nm": [
+      10.0,
+      1000.0
+    ],
+    "repeated_materials_allowed": true,
+    "layer_order": "materials[0] faces the sky; materials[-1] touches the substrate",
+    "t_ambient_k": 300.0
+  },
+  "evaluation_unit": "one simulate_stack call (counted inside lab.physics, invalid designs included)",
+  "git_rev": "1f26fea",
+  "reproduce": "python -m lab.control"
+}

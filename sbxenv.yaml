@@ -1,0 +1,27 @@
+# Docker Sandboxes declarative configuration for Radiative Cooling AI Lab
+version: "1"
+
+name: radiative-cooling-lab
+
+# Default resource sizing for research micro-VMs
+resources:
+  cpus: 2
+  memory: 4g
+
+# Network policies: default deny with access to necessary APIs (e.g. OpenAlex)
+network:
+  preset: balanced
+  allow:
+    - api.openalex.org:443
+    - github.com:443
+    - pypi.org:443
+    - files.pythonhosted.org:443
+
+environment:
+  PYTHONPATH: /home/agent/workspace
+  LAB_EVAL_LEDGER: /home/agent/workspace/runs/eval_ledger.jsonl
+  PYTHONUNBUFFERED: "1"
+
+workspace:
+  mount: true
+  path: .
