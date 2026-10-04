@@ -21,7 +21,14 @@ from bench.plugins import PLACEHOLDER_KEY, load, resolve_objective
 from bench.search import BASELINES, SearchResult, not_run, run_external, run_search
 from bench.summary import best_so_far_curve, evaluation_grid, speedup_interval, success_curve, summarize_method
 
-METHODS = ("random", "alternating", "tpe", "ga", "agent", "ablation")
+METHODS = (
+    "random",
+    "alternating",
+    "tpe",
+    "ga",
+    "agent",
+    "ablation",
+)
 CONTRACT_NAMES = {
     "random": "random",
     "alternating": "alternating",
@@ -29,6 +36,8 @@ CONTRACT_NAMES = {
     "ga": "genetic_algorithm",
     "agent": "agent_lab",
     "ablation": "agent_lab_ablation",
+    "scripted_oracle": "scripted_oracle",
+    "scripted_oracle_no_analyst": "scripted_oracle_no_analyst",
 }
 REFERENCES = ("random", "alternating", "tpe", "ga")
 ROOT = Path(__file__).resolve().parent.parent
@@ -52,7 +61,12 @@ def run_benchmark(
     progress=None,
 ) -> dict:
     rows: list[SearchResult] = []
-    runners = {"agent": agent, "ablation": ablation}
+    runners = {
+        "agent": agent,
+        "ablation": ablation,
+        "scripted_oracle": agent,
+        "scripted_oracle_no_analyst": ablation,
+    }
     for method in methods:
         method_seeds = seeds if method in BASELINES or agent_seeds is None else agent_seeds
         for seed in method_seeds:

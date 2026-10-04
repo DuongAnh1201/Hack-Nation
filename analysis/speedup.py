@@ -43,12 +43,23 @@ DEFAULT_FOCUS = "agent_lab"
 
 LABELS = {
     "agent_lab": "Agent lab",
+    "scripted_oracle": "Scripted oracle (upper bound)",
     "bayes_opt": "Bayesian optimization",
     "random": "Random search",
 }
-SHORT = {"agent_lab": "Agent lab", "bayes_opt": "Bayesian opt.", "random": "Random search"}
+SHORT = {
+    "agent_lab": "Agent lab",
+    "scripted_oracle": "Scripted oracle",
+    "bayes_opt": "Bayesian opt.",
+    "random": "Random search",
+}
 # Fixed colour per method (validated categorical slots 1-4); colour follows the method, never its rank.
-COLORS = {"agent_lab": "#2a78d6", "bayes_opt": "#eb6834", "random": "#1baf7a"}
+COLORS = {
+    "agent_lab": "#2a78d6",
+    "scripted_oracle": "#7048e8",
+    "bayes_opt": "#eb6834",
+    "random": "#1baf7a",
+}
 EXTRA_COLORS = ["#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 
 
@@ -293,7 +304,10 @@ def reach_curve(m: MethodRuns, budget: int) -> list[list[float]]:
 def analyze(bench: Benchmark, focus: str = DEFAULT_FOCUS, n_boot: int = DEFAULT_BOOTSTRAP,
             seed: int = DEFAULT_SEED, source: str = "results/benchmark.json") -> dict[str, Any]:
     if focus not in bench.methods:
-        raise BenchmarkError(f"focus method '{focus}' not in benchmark (have: {sorted(bench.methods)})")
+        if focus == DEFAULT_FOCUS and "scripted_oracle" in bench.methods:
+            focus = "scripted_oracle"
+        else:
+            raise BenchmarkError(f"focus method '{focus}' not in benchmark (have: {sorted(bench.methods)})")
     names = [focus] + [n for n in bench.methods if n != focus]
     comparisons = [speedup(bench.methods[focus], bench.methods[n], bench.budget, n_boot, seed) for n in names[1:]]
     return {
