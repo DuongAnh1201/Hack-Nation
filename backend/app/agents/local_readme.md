@@ -15,14 +15,51 @@ radiative-cooling-lab (Lab Director / Supervisor)
 +-- hypothesis          Hypothesis Lead  -> hypothesis_specialist,       hypothesis_secretary
 +-- planning            Planning Lead    -> planning_specialist,         planning_secretary
 +-- experiment_runner   Runner Lead      -> experiment_runner_specialist, experiment_runner_secretary
-+-- analysis            Analysis Lead    -> analysis_specialist,         analysis_secretary          (placeholder)
-+-- review_safety       Review Lead      -> review_safety_specialist,    review_safety_secretary     (placeholder)
-+-- knowledge_memory    Knowledge Lead   -> knowledge_memory_specialist, knowledge_memory_secretary  (placeholder)
++-- analysis            Analysis Lead    -> analysis_specialist,         analysis_secretary
++-- review_safety       Review Lead      -> review_safety_specialist,    review_safety_secretary
++-- knowledge_memory    Knowledge Lead   -> knowledge_memory_specialist, knowledge_memory_secretary
 ```
 
 1 Lab Director, 7 Leads, 7 specialists, 7 secretaries. The Director only talks to Leads, and each
-Lead only talks to its own specialist and secretary. Placeholder departments have their decision
-defined but not their details.
+Lead only talks to its own specialist and secretary.
+
+## Cycles
+
+A cycle is one pass through the departments, from new evidence to a reviewed verdict. The Director
+numbers the cycles and gives the cycle number in every task; every log entry records it.
+
+- **Analysis** and **Review & Safety** look only at the current cycle.
+- **Knowledge & Memory** merges all cycles so far. The Director calls it at the end of a cycle and
+  before stopping, and uses its report to plan the next cycle and to decide whether to stop.
+
+## Run output: one folder, downloaded as a zip
+
+The log database is set aside for now. Everything a run produces is a file in one run folder, and
+at the end the user downloads that folder as a zip.
+
+```
+runs/<run_id>/
+  record.jsonl                      the research record (shared contract)
+  logs/<department>/department.jsonl   Lead decisions and reports
+  logs/<department>/specialist.jsonl   specialist results
+  experiments/<experiment_id>/      run.py, results.csv, output.log
+  knowledge/merge.py                code that merges every results.csv
+  knowledge/all_results.csv         all experiments' data in one table
+  knowledge/cycle_<n>.md            Knowledge & Memory report per cycle
+  final_report.md                   written by Knowledge & Memory on the final call, for the user
+```
+
+At the end of the process:
+
+1. The Director decides to stop and calls Knowledge & Memory for the final merged report.
+2. A packaging tool zips `runs/<run_id>/` into `runs/<run_id>.zip`. This is deterministic Python:
+   it copies files and makes no decisions.
+3. The Director tells the user the run is finished, gives a short summary, and prompts them to
+   download the zip.
+
+Not decided yet: how Omnigent offers the zip for download (a link in the web session, or a path on
+disk). The prompts do not mention the zip yet; add it to the Director's prompt once the packaging
+tool exists.
 
 ## Decision ownership
 
@@ -42,21 +79,23 @@ defined but not their details.
 
 ## Log permissions
 
-Each department has two log levels in the lab log database:
+Each department has two log levels, stored as files in the run folder:
 
-- **Department log:** the Lead's decisions and reports.
-- **Specialist log:** the specialist's results.
+- **Department log:** the Lead's decisions and reports (`logs/<department>/department.jsonl`).
+- **Specialist log:** the specialist's results (`logs/<department>/specialist.jsonl`).
 
 | Agent | Department log | Specialist log |
 |---|---|---|
 | Lab Director | Read, all departments | No access |
 | Lead | Read, own department | Read, own department |
+| Knowledge Lead | Read, all departments (to merge cycles) | Read, own department |
 | Secretary | Write, own department | Write, own department |
 | Specialist | No access | No access |
 
 No agent can read another department's specialist log. The Director gets detail by asking a Lead.
 These limits must be enforced by the log tools, not just by the prompts: each agent gets only the
-log tools its row allows.
+log tools its row allows, and each tool opens only the files its row allows. The downloaded zip
+contains every log, because it is for the user, not for the agents.
 
 ## Repeated results
 
@@ -107,26 +146,67 @@ calls it again only if something changed elsewhere in the lab; otherwise it move
 
 **Experiment Runner:** decides whether a run went as planned and its data is accepted.
 
-1. `experiment_runner_specialist` writes the script (listing its inputs, tools, packages and
-   outputs), runs it, and saves one CSV row per simulation, keeping failed designs.
+1. `experiment_runner_specialist` writes the code (`run.py`, listing its inputs, tools, packages,
+   outputs and the command to reproduce it), runs it, and saves the code, `results.csv` (one row
+   per simulation, failed designs kept) and `output.log` together in one experiment folder. Code is
+   never changed after it produced data; a fix gets a new experiment folder.
 2. The Lead checks that the run followed the plan, finished, and produced a complete CSV, then
    writes `experiment` and `result` records. It runs only plans marked `runnable_by: agents`.
-3. `experiment_runner_secretary` logs where the files are (experiment ID, script path, CSV path,
-   row count, status), not the data itself.
+3. `experiment_runner_secretary` logs where the files are (experiment ID, experiment folder, row
+   count, status), not the data itself.
 4. The Lead reports to the Director. Whether the result supports the hypothesis is Analysis's
    decision.
 
-Files from runs:
-- Scripts: `runs/<run_id>/scripts/<experiment_id>.py`
-- Data: `runs/<run_id>/data/<experiment_id>.csv`
+**Analysis:** decides the verdict on this cycle's hypothesis, from this cycle's results only.
+
+1. `analysis_specialist` reads this cycle's CSV files, compares the best valid design with the
+   benchmark (cooling power, solar reflectance, 8–13 µm emissivity) and with the hypothesis's
+   prediction, explains failures, and says whether the evidence is enough.
+2. The Lead writes a `verdict` record: `supported`, `refuted` or `inconclusive` (with what data is
+   missing).
+3. `analysis_secretary` logs the specialist's result and the Lead's decision.
+4. The Lead reports the verdict and a recommendation for where to go next to the Director.
+
+**Review & Safety:** decides whether this cycle's claims stand and whether actions need a human.
+
+1. `review_safety_specialist` checks this cycle's records: citations exist and support the claims,
+   numbers match the CSV files, hypotheses are labeled as hypotheses, designs respect the
+   constraint, and which actions need approval.
+2. The Lead writes an `approval` record with `needs_human: yes` or `no`, plus a message for the user
+   when it is `yes`. Fabrication, anything outside simulation, and spending beyond the budget always
+   need a human.
+3. The Lead never fixes another department's record. It reports the problem, and the Director
+   decides who fixes it.
+
+**Knowledge & Memory:** collects the data of all cycles, processes it, and reports to the
+Director. Called at the end of every cycle, and once more as the final call before the lab stops.
+
+1. `knowledge_memory_specialist` collects `record.jsonl`, every experiment's `results.csv`, and the
+   department logs the Lead passes on. It writes and runs `knowledge/merge.py`, which builds
+   `knowledge/all_results.csv` (all rows, with `cycle` and `experiment_id` columns, failed designs
+   kept), and computes the best design and evaluations used per cycle. It then merges findings,
+   tracks how hypotheses changed, finds conflicts, and drafts the report.
+2. The Lead checks that every experiment is included and row counts match the `result` entries,
+   decides what becomes common knowledge, and writes `knowledge/cycle_<n>.md` (Established,
+   Refuted, Best so far, Progress, Conflicts, Open questions). Outdated findings are marked, never
+   deleted.
+3. On the final call the Lead also writes `final_report.md` for the user: the question, findings,
+   best design against the benchmark, refuted hypotheses, limitations, and the next experiment.
+   That file goes into the downloaded zip.
+4. `knowledge_memory_secretary` logs where the files are.
+5. The Lead sends the Director a summary and the file locations.
+
+Files from runs: see "Run output" above. Each experiment can be rerun with `python run.py` from
+its folder.
 
 Open questions:
 - The Experiment Runner specialist runs code it writes itself. Give it a sandbox in its
   `config.yaml` (`os_env.sandbox`: write only to `runs/`, no network) before enabling it.
-- The lab log database and its tools are not built yet. Until they are, the secretaries return
-  their log entries to the Lead as text.
-- How the lab log relates to common knowledge: the Knowledge & Memory department needs to read the
-  logs, which the table above does not allow yet.
+- The log tools and the packaging tool are not built yet. Until the log tools exist, the
+  secretaries return their log entries to the Lead as text. The prompts still say "lab log
+  database"; update them when the log tools exist.
+- The shared record has no field for the cycle number or kind for common knowledge. For now the
+  cycle number goes in each entry's `content`, and the knowledge report is a file.
 - Reruns have no hard limit. A budget policy could cap them.
 
 ## Folder layout

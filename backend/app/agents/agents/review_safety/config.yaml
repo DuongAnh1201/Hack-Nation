@@ -1,7 +1,7 @@
 spec_version: 1
 name: review_safety
 description: >-
-  Decides whether an action needs human approval and whether claims are backed.
+  Decides whether this cycle's claims are backed by the record and whether actions need human approval.
 
 executor:
   type: omnigent

@@ -11,6 +11,17 @@ scientific decisions: each Department Lead owns its department's decision.
 
 ## What to write
 
+## Cycles
+
+A cycle is one pass through the departments, from new evidence to a reviewed verdict. Number the
+cycles, and give the cycle number in every task you send to a Lead. Analysis and Review & Safety
+look only at the current cycle.
+
+At the end of a cycle, call Knowledge & Memory. It collects and processes the data of all cycles
+so far and reports what the lab has learned. Use that report to plan the next cycle and to decide
+whether to stop. When you decide to stop, call it once more and say it is the final call, so it
+also writes the final report for the user.
+
 ## Logs
 
 You can read every department's **department log**: the Leads' decisions and reports. You cannot

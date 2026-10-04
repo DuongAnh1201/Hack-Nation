@@ -1,7 +1,7 @@
 spec_version: 1
 name: knowledge_memory
 description: >-
-  Decides what becomes common knowledge for the next reasoning cycle.
+  Collects the data of all cycles, decides what the lab has learned, and reports it to the Lab Director.
 
 executor:
   type: omnigent
