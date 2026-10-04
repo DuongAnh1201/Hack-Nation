@@ -185,9 +185,11 @@ calls it again only if something changed elsewhere in the lab; otherwise it move
 **Experiment Runner:** decides whether a run went as planned and its data is accepted.
 
 1. `experiment_runner_specialist` writes the code (`run.py`, listing its inputs, tools, packages,
-   outputs and the command to reproduce it), runs it, and saves the code, `results.csv` (one row
-   per simulation, failed designs kept) and `output.log` together in one experiment folder. Code is
-   never changed after it produced data; a fix gets a new experiment folder.
+   outputs and the command to reproduce it), following `runs/example/experiments/E0/run.py`. It
+   runs it with the `run_experiment` tool, which saves the code, `results.csv` (one row per
+   simulation, written with `lab.csv_helper.write_results_csv`, failed designs kept) and
+   `output.log` together in one experiment folder. Code is never changed after it produced data;
+   a fix gets a new experiment folder.
 2. The Lead checks that the run followed the plan, finished, and produced a complete CSV, then
    writes `experiment` and `result` records. It runs only plans marked `runnable_by: agents`.
 3. `experiment_runner_secretary` logs where the files are (experiment ID, experiment folder, row
@@ -349,4 +351,76 @@ permissions are enforced:
 - **Department Leads** carry `read_record`, `write_record` and `read_department_logs`.
 - **The Director** carries `read_record` and `read_all_department_logs`; the Knowledge Lead also
   has `read_all_department_logs`.
+
+### What the agent-facing tools guarantee
+
+Tools return data and never decide. These rules are covered by `tests/test_tools.py`:
+
+- **`search_papers`** (`search_academic_papers`): only Springer, Nature, IEEE and arXiv. Every
+  result has `origin`: `openalex` (live) or `offline_fallback` (built-in list, used when OpenAlex
+  fails or returns too little). Fallback entries pass the same publisher filter, and each one's DOI
+  was checked against OpenAlex. Results are not ranked; the Literature department decides.
+- **`run_experiment(experiment_id, run_id, timeout_s)`**: runs the agent-written
+  `runs/<run_id>/experiments/<experiment_id>/run.py` inside its folder, saves everything printed
+  to `output.log`, and returns the exit code, a timeout flag, the paths and the row count of
+  `results.csv`. It never writes or changes `run.py`. (`execute_experiment_script`, which built
+  the script from a template, stays in `lab/tools.py` but no agent has it.)
+- **`compare_to_benchmark(p_net_w_m2, solar_reflectance, window_emissivity)`**: compares cooling
+  power with the Stanford control in our simulator (11.83 W/m²), and the two optional metrics with
+  the control's values in `results/control.json`. Reports numbers only; Analysis decides the
+  verdict.
+- **`log_to_common_knowledge(payload, level, run_id, repeat_of)`**: appends to
+  `runs/<run_id>/logs/<department>/<level>.jsonl`; `department` entries also go into the run's
+  `common_knowledge.json`. Entry IDs look like `literature.specialist.3`.
+- **`read_department_logs` / `read_all_department_logs`**: see "Log permissions".
+- **`package_run(run_id)`**: zips `runs/<run_id>/` into `runs/<run_id>.zip`, including the record,
+  logs, experiments, knowledge reports and `common_knowledge.json`.
+
+## Setup
+
+From the repo root, once per machine:
+
+```bash
+uv venv .venv --python 3.12
+source .venv/bin/activate
+uv pip install numpy scipy optuna pyyaml pytest
+uv pip install -e .
+```
+
+`uv pip install -e .` makes `lab`, `bench`, `analysis` and `physics_lab` importable from any
+folder, which the agents' `run.py` and `merge.py` need. `pyproject.toml` lists those packages
+explicitly; without that, setuptools stops with "Multiple top-level packages discovered".
+
+Omnigent:
+
+```bash
+omni config list                     # check the Claude credential (subscription or API key)
+omni start                           # local server and web UI
+omni run backend/app/agents          # start the Lab Director
+```
+
+Start Omnigent from a terminal where `.venv` is active, so the agents' `python` is the same one.
+Keep secrets (`ANTHROPIC_API_KEY`, `BRIGHTDATA_API_TOKEN`, …) in `.env`, never in issues, configs
+or code. Reference them as `${VAR}` in agent configs.
+
+## Change log
+
+Newest first.
+
+- **One Common Knowledge per run.** `runs/<run_id>/common_knowledge.json` replaces the single
+  `runs/common_knowledge.json` shared by all runs. A run is one whole research project across all
+  its cycles; its Common Knowledge is in its zip. `CommonKnowledgeHub` and `MicroVMManager` take
+  a `run_id`.
+- **Secretaries log in two levels and brief the Director.** Follows #18, except that secretaries
+  no longer write to the record: their `write_record` was removed. New tools
+  `read_department_logs` (Leads) and `read_all_department_logs` (Director, Knowledge Lead); log
+  wrappers are fixed to their own department. See "Secretary: log and brief".
+- **Agent tools aligned with this design (#48, PR #49).** Search fallback cleaned (one fabricated
+  paper and three papers from disallowed publishers removed) and labelled with `origin`;
+  `run_experiment` replaces the template script tool for the Experiment Runner specialist;
+  `compare_to_benchmark` also compares reflectance and emissivity; `pip install -e .` fixed.
+- **Run output as one folder, downloaded as a zip.** The log database was set aside; everything a
+  run produces is a file under `runs/<run_id>/`.
+- **Seven departments, each Lead + specialist + secretary,** with decision ownership, log
+  permissions, repeated-result checks and cycles.
 
