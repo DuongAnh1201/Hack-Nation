@@ -1138,25 +1138,25 @@ requestAnimationFrame(frame);
         if (r.ok) { API = base; return await r.json(); }
       } catch (e) { /* try next */ }
     }
-    for (const base of candidates) {
-      try {
-        const r = await fetch(base + '/health', {cache: 'no-store'});
-        if (r.ok) {
-          API = base;
-          return { can_start: true, reasons: [], active_runs: [] };
-        }
-      } catch (e) { /* try next */ }
-    }
-    return { can_start: true, reasons: [], active_runs: [] };
+    return null;
   }
 
   function renderStatus() {
     el.conn.textContent = '';
-    const where = API ? API.replace(/^https?:\/\//, '') : 'physiolearning.courses';
-    el.conn.append('Connected to ', Object.assign(document.createElement('b'), {textContent: where}), ' · ');
-    el.conn.append(Object.assign(document.createElement('b'), {textContent: 'live discovery ready'}));
-    el.start.disabled = false;
+    if (!status) {
+      el.conn.append('Backend: ', Object.assign(document.createElement('b'), {textContent: 'offline / connecting…'}));
+      el.start.disabled = true;
+      note('Backend is currently unreachable. Please check connection.', true);
+      return;
+    }
+    const where = API ? API.replace(/^https?:\/\//, '') : 'physics-study-api-7twp.onrender.com';
+    el.conn.append('Connected to backend: ', Object.assign(document.createElement('b'), {textContent: where}), ' · ');
+    el.conn.append(Object.assign(document.createElement('b'), {textContent: status.can_start ? 'lab ready' : 'restricted'}));
+    el.start.disabled = !status.can_start;
     el.codeRow.hidden = !(status && status.needs_code);
+    if (!status.can_start && status.reasons && status.reasons.length) {
+      note(status.reasons.join(' · '), true);
+    }
   }
 
   async function loadRuns(select) {
@@ -1164,21 +1164,15 @@ requestAnimationFrame(frame);
     try {
       runs = await api('/api/lab/runs');
     } catch (e) {
-      try {
-        const r2 = await api('/api/runs');
-        runs = (r2 || []).map(r => ({
-          id: r.id,
-          records: r.entries || 19,
-          experiments: r.simulations || 1,
-          has_report: true,
-          running: false,
-        }));
-      } catch (err) {
-        runs = [];
-      }
+      note(`Failed to load runs from backend: ${e.message}`, true);
+      runs = [];
     }
     el.run.textContent = '';
-    if (!runs || !runs.length) { el.run.append(new Option('Benchmark Baseline (pdrc-01)', 'pdrc-01')); choose('pdrc-01'); return; }
+    if (!runs || !runs.length) {
+      el.run.append(new Option('No runs yet on backend', ''));
+      choose(null);
+      return;
+    }
     for (const r of runs) {
       const label = `${r.id}${r.running ? ' · running' : ''} · ${r.records || 0} records · ${r.experiments || 0} experiments`;
       el.run.append(new Option(label, r.id));
@@ -1438,124 +1432,36 @@ requestAnimationFrame(frame);
     }
   }
 
-  async function runClientDiscovery(problem) {
-    const demoRunId = `run-${Date.now().toString(36)}`;
-    runId = demoRunId;
-    el.run.prepend(new Option(`${demoRunId} · running · live discovery`, demoRunId));
-    el.run.value = demoRunId;
-
-    const materials = ["Si3N4", "SiO2", "Si3N4", "SiO2"];
-    const baseT = [70.0, 280.0, 15.0, 65.0];
-    let bestP = 0;
-    const clientEvs = [];
-    const clientSims = [];
-
-    const pushEvent = (agent, kind, text, tool) => {
-      const ev = {t: Date.now() / 1000, agent, kind, text, tool};
-      clientEvs.push(ev);
-      lastEvents = clientEvs;
-      renderAgents([{agent: 'lab_director'}, {agent: 'literature_specialist'}, {agent: 'hypothesis_specialist'}, {agent: 'planning_specialist'}, {agent: 'experiment_runner_specialist'}, {agent: 'analysis_specialist'}, {agent: 'review_safety_specialist'}, {agent: 'knowledge_memory_specialist'}], clientEvs);
-      renderFeed();
-      renderPath(clientEvs);
-      renderDepts({agents: [{agent: 'lab_director'}, {agent: 'literature'}, {agent: 'hypothesis'}, {agent: 'planning'}, {agent: 'experiment_runner'}, {agent: 'analysis'}, {agent: 'review_safety'}, {agent: 'knowledge_memory'}], events: clientEvs, running: true});
-    };
-
-    pushEvent('lab_director', 'message:user', problem);
-    await new Promise(r => setTimeout(r, 600));
-
-    pushEvent('literature_specialist', 'tool_call', '{"query": "radiative cooling metamaterial", "limit": 3}', 'search_academic_papers');
-    await new Promise(r => setTimeout(r, 600));
-    pushEvent('literature_specialist', 'tool_result', 'Nature 515, 540-544 (2014): 7-layer HfO2/SiO2 achieves 97% solar reflectance and 40.1 W/m² net cooling power.');
-    pushEvent('literature', 'record', 'L-1 · literature · Raman benchmark validated.');
-    await new Promise(r => setTimeout(r, 700));
-
-    pushEvent('hypothesis_specialist', 'tool_call', '{"materials": ["Si3N4", "SiO2", "Si3N4", "SiO2"]}', 'material_properties');
-    await new Promise(r => setTimeout(r, 600));
-    pushEvent('hypothesis_specialist', 'tool_result', 'Dielectric contrast n~2.0 (Si3N4) and n~1.45 (SiO2) yields peak solar reflectance. Phonon reststrahlen covers 8-13 µm.');
-    pushEvent('hypothesis', 'record', 'H-1 · hypothesis · 4-layer Si3N4/SiO2 alternating stack proposed on Ag substrate.');
-    await new Promise(r => setTimeout(r, 700));
-
-    pushEvent('planning', 'record', 'P-1 · plan · Coordinate search thickness optimization within 15 simulations.');
-    await new Promise(r => setTimeout(r, 600));
-
-    pushEvent('experiment_runner_specialist', 'tool_call', '{"design": "Si3N4/SiO2/Si3N4/SiO2", "budget": 15}', 'run_experiment');
-    for (let i = 1; i <= 15; i++) {
-      const candT = baseT.map((t) => Math.max(10, Math.min(1000, Math.round(t + (Math.random() - 0.5) * 40))));
-      let pNet = 46.5 + i * 0.78 + (Math.random() * 1.5 - 0.75);
-      let rSol = 0.968 + (i * 0.0006);
-      let eWin = 0.79 + (i * 0.0018);
-      try {
-        const sim = await api('/api/simulate', {method: 'POST', body: JSON.stringify({materials, thicknesses_nm: candT, substrate: 'Ag'})});
-        if (sim && sim.p_net_w_m2 != null) {
-          pNet = sim.p_net_w_m2;
-          rSol = sim.solar_reflectance;
-          eWin = sim.window_emissivity;
-        }
-      } catch (x) { /* use calibrated fallback */ }
-
-      if (pNet > bestP) bestP = pNet;
-      clientSims.push({evaluation: i, materials, thicknesses_nm: candT, substrate: 'Ag', valid: true, p_net_w_m2: pNet, solar_reflectance: rSol, window_emissivity: eWin});
-      renderCharts({control: {solar_reflectance: 0.97, window_emissivity: 0.386, p_net_w_m2: 11.83}, experiments: [{id: 'exp_01', finished: false, rows: [], evaluations: clientSims}]});
-      renderMeta({problem, agents: [], running: true}, {experiments: [{id: 'exp_01', finished: false, rows: [], evaluations: clientSims}]});
-      await new Promise(r => setTimeout(r, 220));
-    }
-
-    pushEvent('experiment_runner', 'record', `R-1 · result · Best net cooling power ${bestP.toFixed(2)} W/m² achieved with 4 layers.`);
-    await new Promise(r => setTimeout(r, 700));
-
-    pushEvent('analysis', 'record', `V-1 · verdict · Target 50 W/m² EXCEEDED by +${(bestP - 50).toFixed(2)} W/m². Hypothesis supported.`);
-    await new Promise(r => setTimeout(r, 700));
-
-    pushEvent('review_safety', 'record', 'A-1 · approval · All constraints satisfied (4 <= 5 layers, non-toxic earth-abundant materials).');
-    await new Promise(r => setTimeout(r, 600));
-
-    const reportMd = `# Scientific Discovery Report: ${demoRunId}
-
-## Problem Statement
-${problem}
-
-## Discovery Outcome
-- **Stack Architecture:** 4 alternating layers on Silver (Ag) substrate
-- **Materials:** Si3N4 / SiO2 / Si3N4 / SiO2
-- **Thicknesses:** ${baseT.join(' nm, ')} nm
-- **Net Cooling Power (P_net):** **${bestP.toFixed(2)} W/m²** (exceeds 50 W/m² target and crushes Stanford benchmark)
-- **Solar Reflectance:** 97.5%
-- **Window Emissivity (8–13 µm):** 81.4%
-
-## Epistemic Chain of Custody
-1. **[L-1] Literature:** Validated peer-reviewed benchmark (Raman et al., Nature 2014).
-2. **[H-1] Hypothesis:** Formulated 4-layer Si3N4/SiO2 stack maximizing solar reflectance via high refractive index contrast.
-3. **[P-1] Plan:** Coordinate thickness optimization over 15 simulations.
-4. **[R-1] Experiment:** Evaluated physical transfer-matrix optics in real-time.
-5. **[V-1] Verdict:** Confirmed hypothesis supported (P_net > 50.0 W/m²).
-6. **[A-1] Safety:** Verified within search space constraints.
-`;
-    el.reportLabel.textContent = `Report · final_report.md`;
-    el.report.textContent = reportMd;
-    renderDepts({agents: [{agent: 'lab_director'}, {agent: 'literature'}, {agent: 'hypothesis'}, {agent: 'planning'}, {agent: 'experiment_runner'}, {agent: 'analysis'}, {agent: 'review_safety'}, {agent: 'knowledge_memory'}], events: clientEvs, running: false});
-    note(`Discovery complete! Best P_net: ${bestP.toFixed(2)} W/m² (exceeds 50 W/m² target).`);
-  }
-
   el.start.addEventListener('click', async () => {
     const problem = el.problem.value.trim();
     if (problem.length < 20) { note('Write a problem statement of at least 20 characters.', true); return; }
-    el.start.disabled = true; note('Starting the Omnigent Autonomous Lab…');
+    el.start.disabled = true; note('Starting Omnigent autonomous discovery on backend…');
     try {
-      const res = await api('/api/lab/runs', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Lab-Code': el.code.value},
-        body: JSON.stringify({problem, cycles: Number(el.cycles.value)})});
-      note(`Run ${res.run_id} started. The agents' activity appears below as they work.`);
+      const res = await api('/api/lab/runs', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-Lab-Code': el.code.value},
+        body: JSON.stringify({problem, cycles: Number(el.cycles.value)})
+      });
+      note(`Run ${res.run_id} started on backend. Streaming live agent activity…`);
       await loadRuns(res.run_id);
     } catch (e) {
-      note('Executing interactive multi-agent discovery cycle…');
-      await runClientDiscovery(problem);
+      note(`Backend error starting run: ${e.message}`, true);
+    } finally {
+      el.start.disabled = false;
     }
-    finally { el.start.disabled = false; }
   });
   el.stop.addEventListener('click', async () => {
     if (!runId) return;
     el.stop.disabled = true;
-    try { await api(`/api/lab/runs/${encodeURIComponent(runId)}/stop`, {method: 'POST', headers: {'X-Lab-Code': el.code.value}}); note(`Run ${runId} stopped.`); }
-    catch (e) { note(e.message, true); }
+    try {
+      await api(`/api/lab/runs/${encodeURIComponent(runId)}/stop`, {
+        method: 'POST',
+        headers: {'X-Lab-Code': el.code.value}
+      });
+      note(`Run ${runId} stopped on backend.`);
+    } catch (e) {
+      note(`Backend error stopping run: ${e.message}`, true);
+    }
     loadRuns(runId);
   });
   el.run.addEventListener('change', () => choose(el.run.value));
