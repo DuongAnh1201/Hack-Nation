@@ -12,6 +12,5 @@ instructions: prompt.md
 
 tools:
   agents:
-    - hypothesis_review
-    - hypothesis_confidence
+    - hypothesis_specialist
     - hypothesis_secretary

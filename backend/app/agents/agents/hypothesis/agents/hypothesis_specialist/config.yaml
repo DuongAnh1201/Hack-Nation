@@ -1,7 +1,7 @@
 spec_version: 1
-name: literature_secretary
+name: hypothesis_specialist
 description: >-
-  Keeps the Literature department's log in the lab log database.
+  Reviews hypotheses against new evidence and scores confidence for the Hypothesis Lead.
 
 executor:
   type: omnigent
