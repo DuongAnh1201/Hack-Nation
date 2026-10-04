@@ -319,6 +319,8 @@ def simulate_stack(materials, thicknesses_nm, substrate="Ag"):
             "substrate": substrate,
             "valid": valid,
             "p_net_w_m2": result["p_net_w_m2"],
+            "solar_reflectance": result["solar_reflectance"],
+            "window_emissivity": result["window_emissivity"],
         }
     )
     return result

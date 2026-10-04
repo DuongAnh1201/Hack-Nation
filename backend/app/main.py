@@ -20,6 +20,18 @@ def health() -> dict[str, str]:
 
 
 # Routers from app/api/ get registered here.
+from pathlib import Path  # noqa: E402
+
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+
 from app.api.lab import router as lab_router  # noqa: E402
+from app.api.live import router as live_router  # noqa: E402
 
 app.include_router(lab_router)
+app.include_router(live_router)
+
+# Serve the website from the same address, so a live demo needs one URL and no CORS setup
+# (http://localhost:8000/). Mounted last: /health and /api/* above take precedence.
+SITE = Path(__file__).resolve().parents[2] / "frontend"
+if (SITE / "index.html").is_file():
+    app.mount("/", StaticFiles(directory=SITE, html=True), name="site")

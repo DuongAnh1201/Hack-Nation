@@ -832,6 +832,9 @@ def run_experiment(experiment_id: str, run_id: str = "default", timeout_s: int =
 
     log_path = exp_dir / "output.log"
     csv_path = exp_dir / "results.csv"
+    # Every simulate_stack call in run.py is appended here as it happens, so the website can
+    # chart an experiment live, before results.csv exists.
+    env = {**os.environ, "LAB_EVAL_LEDGER": str(exp_dir / "evaluations.jsonl")}
     timed_out = False
     with open(log_path, "w", encoding="utf-8") as log:
         try:
@@ -842,6 +845,7 @@ def run_experiment(experiment_id: str, run_id: str = "default", timeout_s: int =
                 stderr=subprocess.STDOUT,
                 timeout=timeout_s,
                 check=False,
+                env=env,
             )
             exit_code = proc.returncode
         except subprocess.TimeoutExpired:
@@ -859,6 +863,7 @@ def run_experiment(experiment_id: str, run_id: str = "default", timeout_s: int =
         "results_csv": str(csv_path) if csv_path.is_file() else None,
         "rows": rows,
         "output_log": str(log_path),
+        "evaluations_log": str(exp_dir / "evaluations.jsonl"),
     }
 
 
