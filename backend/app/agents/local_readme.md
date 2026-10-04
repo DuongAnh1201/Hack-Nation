@@ -65,17 +65,45 @@ tool exists.
 
 - **The specialist** investigates and advises. It returns its result to the Lead and writes nothing
   to the record or the logs.
-- **The Lead** makes the department's decision, writes it to the record, and reports to the
-  Director.
-- **The secretary** writes the department's log entries. It logs what the Lead sends and never
-  changes it.
+- **The Lead** makes the department's decision, writes it to the record (only Leads have
+  `write_record`), checks the secretary's briefing, and sends it to the Director.
+- **The secretary** writes the department's log entries and the briefing for the Director. It works
+  only from what the Lead sends, never changes it, never writes to the record, and decides nothing.
 - **The Lab Director** decides which department acts next and when the research stops. It does not
   make the departments' scientific decisions.
-- **Every Lead reports back to the Director** when its department finishes: the decision and its
-  record IDs. Leads never call another department, so every handoff goes through the Director.
+- **Every Lead reports back to the Director** with the briefing when its department finishes.
+  Leads never call another department, so every handoff goes through the Director.
 - **Only the Director talks to the user.** When a Lead needs a human (e.g. a plan the agents cannot
   run), it puts a message for the user in its report, and the Director sends it and passes the
   answer back.
+
+## Secretary: log and brief
+
+This follows the "briefing officer" idea agreed in #18, with one change: the secretary no longer
+writes to the record. Only the Lead does.
+
+1. The specialist returns its result to the Lead. The Lead has the secretary log it at the
+   `specialist` level.
+2. The Lead decides and writes the decision to the record.
+3. The Lead sends the decision to the secretary, which logs it at the `department` level and
+   writes the briefing.
+4. The Lead checks that the briefing matches its decision, sends it back to the secretary if
+   anything is wrong, then sends it to the Director as its report.
+
+Every briefing has the same headings, so the Director reads all departments the same way:
+
+| Heading | Content |
+|---|---|
+| Decision | What the Lead decided, in one or two sentences |
+| Record IDs | Entries the decision wrote and is based on |
+| Reason | Why, in the Lead's words |
+| Suggested next step | The Lead's recommendation; the Director decides |
+| Repeat | `no`, or `yes` with the earlier log entry ID |
+| Files | Locations of experiment folders or reports, or `none` |
+| Needs the user | The message for the user, or `no` |
+| Log entry | The ID of the department-log entry |
+
+The secretary writes `not given` for anything the Lead did not send; it never fills gaps itself.
 
 ## Log permissions
 
@@ -84,18 +112,25 @@ Each department has two log levels, stored as files in the run folder:
 - **Department log:** the Lead's decisions and reports (`logs/<department>/department.jsonl`).
 - **Specialist log:** the specialist's results (`logs/<department>/specialist.jsonl`).
 
-| Agent | Department log | Specialist log |
-|---|---|---|
-| Lab Director | Read, all departments | No access |
-| Lead | Read, own department | Read, own department |
-| Knowledge Lead | Read, all departments (to merge cycles) | Read, own department |
-| Secretary | Write, own department | Write, own department |
-| Specialist | No access | No access |
+| Agent | Department log | Specialist log | Tool |
+|---|---|---|---|
+| Lab Director | Read, all departments | No access | `read_all_department_logs` |
+| Lead | Read, own department | Read, own department | `read_department_logs` |
+| Knowledge Lead | Read, all departments (to merge cycles) | Read, own department | both of the above |
+| Secretary | Write, own department | Write, own department | `log_to_common_knowledge` |
+| Specialist | No access | No access | none |
 
 No agent can read another department's specialist log. The Director gets detail by asking a Lead.
-These limits must be enforced by the log tools, not just by the prompts: each agent gets only the
-log tools its row allows, and each tool opens only the files its row allows. The downloaded zip
-contains every log, because it is for the user, not for the agents.
+The tools enforce these limits, not just the prompts:
+- each agent gets only the tools in its row (Omnigent loads only the tools in an agent's own
+  folder);
+- the secretary's and the Lead's wrappers have their department fixed, so they cannot write or
+  read another department's log;
+- `read_all_department_logs` never returns specialist logs.
+
+The functions are in `lab/tools.py`. `log_to_common_knowledge` also records department-level
+entries in the cross-cycle Common Knowledge Hub (`runs/common_knowledge.json`), as before. The
+downloaded zip contains every log, because it is for the user, not for the agents.
 
 ## Repeated results
 
@@ -202,9 +237,11 @@ its folder.
 Open questions:
 - The Experiment Runner specialist runs code it writes itself. Give it a sandbox in its
   `config.yaml` (`os_env.sandbox`: write only to `runs/`, no network) before enabling it.
-- The log tools and the packaging tool are not built yet. Until the log tools exist, the
-  secretaries return their log entries to the Lead as text. The prompts still say "lab log
-  database"; update them when the log tools exist.
+- The Common Knowledge Hub file (`runs/common_knowledge.json`) is shared by all runs, so it is not
+  inside the run folder or the zip. The per-run department logs are. Moving the hub into
+  `runs/<run_id>/` would need a change to `lab/sandbox.py`.
+- Agents pass `run_id` to the record and log tools themselves; it defaults to `"default"`. The
+  Director should state the run ID in every task.
 - The shared record has no field for the cycle number or kind for common knowledge. For now the
   cycle number goes in each entry's `content`, and the knowledge report is a file.
 - Reruns have no hard limit. A budget policy could cap them.
@@ -299,12 +336,17 @@ instead of the prompt text, its `prompt.md` is missing or misnamed.
 
 The simulator (`simulate_stack`, `optimize_thicknesses`), the record tools (`read_record`,
 `write_record`), paper search (`search_papers`), material properties (`list_materials`, `material_properties`),
-and knowledge logging tools (`log_to_common_knowledge`, `read_common_knowledge`) are deterministic tools
-implemented in [lab/tools.py](../../../../lab/tools.py).
+and the log tools (`log_to_common_knowledge`, `read_department_logs`, `read_all_department_logs`)
+are deterministic tools implemented in [lab/tools.py](../../../lab/tools.py).
 
 Omnigent finds local tools in `tools/python/*.py` inside each agent's folder, which is also how tool
 permissions are enforced:
-- **Specialists** carry domain execution tools (e.g. `literature_specialist` uses `search_papers`, `hypothesis_specialist` uses `list_materials`/`material_properties`, `analysis_specialist` uses `simulate_stack`/`optimize_thicknesses`).
-- **Secretaries** carry logging tools (`log_to_common_knowledge`, `write_record`) and act as internal briefing officers for Department Leads.
-- **Department Leads & Director** coordinate delegation and review via `read_record`.
+- **Specialists** carry domain tools: `literature_specialist` uses `search_papers`;
+  `hypothesis_specialist` uses `list_materials` and `material_properties`;
+  `experiment_runner_specialist` uses `simulate_stack`, `optimize_thicknesses` and
+  `run_experiment`; `analysis_specialist` uses `compare_to_benchmark`.
+- **Secretaries** carry only `log_to_common_knowledge`, fixed to their own department.
+- **Department Leads** carry `read_record`, `write_record` and `read_department_logs`.
+- **The Director** carries `read_record` and `read_all_department_logs`; the Knowledge Lead also
+  has `read_all_department_logs`.
 

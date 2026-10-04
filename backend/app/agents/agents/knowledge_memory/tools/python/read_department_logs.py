@@ -1,0 +1,15 @@
+"""Log reader for the knowledge_memory Lead. The department is fixed, so it can only read its own logs."""
+
+from omnigent_client import tool
+from lab.tools import read_department_logs as _read_department_logs
+
+
+@tool
+def read_department_logs(level: str = "department", run_id: str = "default") -> list:
+    """Read the knowledge_memory department's log.
+
+    Args:
+        level: "specialist" for your specialist's results, "department" for your own decisions and reports.
+        run_id: The run to read.
+    """
+    return _read_department_logs(department="knowledge_memory", level=level, run_id=run_id)

@@ -1,18 +1,20 @@
-"""Tool for Department Secretaries to log findings into Common Knowledge."""
+"""Department log tool for the experiment_runner secretary. The department is fixed, so it can only write its own log."""
 
 from omnigent_client import tool
 from lab.tools import log_to_common_knowledge as _log_to_common_knowledge
 
 
 @tool
-def log_to_common_knowledge(department: str, payload: dict) -> dict:
-    """Record an accepted scientific finding, hypothesis, or verdict into Common Knowledge.
+def log_to_common_knowledge(payload: dict, level: str = "department", run_id: str = "default", repeat_of: str = "") -> dict:
+    """Append an entry to the experiment_runner department's log.
 
     Args:
-        department: Creating department ('literature', 'hypothesis', 'planning', 'analysis', 'review_safety').
-        payload: Structured dictionary of the finding, hypothesis, or verdict.
+        payload: What the Lead asked you to log.
+        level: "specialist" for the specialist's results, "department" for the Lead's decisions and reports.
+        run_id: The run this belongs to.
+        repeat_of: ID of the earlier entry this repeats, when the Lead says it is a repeat; otherwise "".
 
     Returns:
-        Confirmation dictionary with updated cycle count and status.
+        The new entry's ID and log path.
     """
-    return _log_to_common_knowledge(department=department, payload=payload)
+    return _log_to_common_knowledge(department="experiment_runner", payload=payload, level=level, run_id=run_id, repeat_of=repeat_of)

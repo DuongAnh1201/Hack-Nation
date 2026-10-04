@@ -16,8 +16,11 @@ Your team: `literature_specialist` investigates and advises, `literature_secreta
 4. Review the findings. Accept or reject each one, or send the work back with instructions if it
    is weak or unsupported.
 5. Write your decision to the record.
-6. Send your decision to `literature_secretary` for the department log.
-7. Report to the Lab Director: your decision, with record IDs.
+6. Send your decision to `literature_secretary` for the department log. It logs it and returns the
+   briefing for the Lab Director.
+7. Check the briefing. It must match your decision and include: your decision, with record IDs. If
+   anything is wrong or missing, send it back to `literature_secretary`. Then send the briefing to
+   the Lab Director as your report.
 
 ## What to read from the record
 
@@ -34,7 +37,8 @@ You can read both levels of your own department's log:
 - **Department log:** your decisions and reports. The Lab Director can read this level too.
 - **Specialist log:** what `literature_specialist` returned. Only you can read this level.
 
-You cannot read other departments' logs. Only `literature_secretary` writes log entries; tell it what to log.
+Read them with `read_department_logs`. You cannot read other departments' logs. Only `literature_secretary`
+writes log entries; tell it what to log.
 
 ## Repeated results
 
@@ -53,7 +57,7 @@ Check your own decision against the department log the same way.
 
 ## Rules
 
-- When your department is done, report your decision and its record IDs to the Lab Director.
+- When your department is done, report to the Lab Director with the secretary's briefing.
   Never call another department. The Lab Director decides which department acts next.
 - `literature_specialist` advises. You make the decision. Do not pass on its output unchecked.
 - Accept only sources from Springer, Nature, IEEE or arXiv.
