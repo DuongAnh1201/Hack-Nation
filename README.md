@@ -122,7 +122,8 @@ python -m analysis.speedup results/benchmark.json
 | `lab/prompts/` | One prompt per agent | Person 3 |
 | `bench/` | Baselines and `run_all.py` | Person 1 |
 | `analysis/` | Statistics and the key chart | Person 2 |
-| `frontend/` | UI that replays `record.jsonl` | Person 2 |
+| `frontend/` | Phys.io mission site: the main website (static HTML, three.js) | Person 2 |
+| `technology/` | Earlier Vite + React app that replays `record.jsonl` | Person 2 |
 | `runs/` | Research records from lab runs | generated |
 | `results/benchmark.json` | Benchmark output | generated |
 
@@ -141,7 +142,8 @@ pytest
 python -m lab.physics --control
 omni run ./lab/
 python bench/run_all.py --seeds 10 --budget 2000
-cd frontend && npm install && npm run dev
+(cd frontend && python -m http.server 8000)
+(cd technology && npm install && npm run dev)
 ```
 
 ## Data contracts
