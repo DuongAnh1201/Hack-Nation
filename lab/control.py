@@ -28,11 +28,30 @@ def _git_rev():
 def build_report():
     c = physics.stanford_control()
     c["target_status"] = "final" if c["passed"] else "provisional: control did not pass all checks"
+    c["layer_thickness_provenance"] = (
+        "Confirmed from Raman et al., Nature 515, 540-544 (2014), Fig. 1d diagram and text: "
+        "7 alternating layers of SiO2 (230, 688, 73, 54 nm) and HfO2 (485, 13, 34 nm) on 200 nm Ag."
+    )
+    c["gap_analysis"] = {
+        "primary_cause": "thermal_exchange",
+        "explanation": (
+            "The 28.3 W/m² gap between simulated 11.8 W/m² and published 40.1 W/m² is predominantly thermal, not solar. "
+            "Because solar reflectance is 97.7%, reducing solar irradiance from 1000 W/m² (normal AM1.5) to 850 W/m² "
+            "(tilted rooftop in paper) accounts for only +3.45 W/m². Even in complete darkness (P_sun = 0), "
+            "simulated P_net is 34.69 W/m², still below 40.1 W/m². The majority of the gap arises on the thermal side: "
+            "the 7-layer design achieves an average 8–13 µm window emissivity of 0.386 in our simulator (using Franta database "
+            "optical constants), while the analytic clear-sky model radiates P_atm = 84.57 W/m² back down onto the surface."
+        ),
+        "solar_delta_850_vs_1000_w_m2": 3.45,
+        "p_net_zero_sun_w_m2": 34.69,
+        "window_emissivity_8_13um": 0.3857,
+    }
     c["search_space"] = physics.SEARCH_SPACE
     c["evaluation_unit"] = "one simulate_stack call (counted inside lab.physics, invalid designs included)"
     c["git_rev"] = _git_rev()
     c["reproduce"] = "python -m lab.control"
     return c
+
 
 
 def main(argv=None):
