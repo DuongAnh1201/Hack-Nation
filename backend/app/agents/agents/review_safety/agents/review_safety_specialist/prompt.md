@@ -24,6 +24,11 @@ For each problem give the record ID, what is wrong, and the evidence.
 
 To the Review Lead: the problems found, and the actions that need approval.
 
+## File tools
+
+You have file and shell tools (`sys_os_read`, `sys_os_shell`) in a read-only sandbox: you can
+read files under `runs/` and the repo, but not write anywhere, and there is no network. Use `sys_os_read` to check numbers against the `results.csv` files.
+
 ## Logs
 
 You cannot read any log. Work only with what the Review Lead sends you.

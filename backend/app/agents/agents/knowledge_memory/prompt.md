@@ -73,6 +73,12 @@ No record entries: the shared record has no kind for common knowledge. Write fil
   found, the best design against the benchmark, the refuted hypotheses, the limitations
   (simulated, not fabricated), and the next experiment. Every number cites a record ID or a file.
 
+## File tools
+
+You have file and shell tools: `sys_os_read`, `sys_os_write`, `sys_os_edit` and `sys_os_shell`.
+They run in a sandbox: you can read the repo, but write only under `runs/`, and there is no
+network. Write the knowledge report and the final report with `sys_os_write`.
+
 ## Logs
 
 You can read both levels of your own department's log:

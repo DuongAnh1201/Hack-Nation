@@ -59,8 +59,9 @@ At the end of the process:
    download the zip.
 
 Not decided yet: how Omnigent offers the zip for download (a link in the web session, or a path on
-disk). The prompts do not mention the zip yet; add it to the Director's prompt once the packaging
-tool exists.
+disk). `package_run` exists in `lab/tools.py`, but no agent has it yet and the Director's prompt
+does not mention the zip: until it does, make the zip by hand with
+`python -c "from lab.tools import package_run; print(package_run('<run_id>'))"`.
 
 ## Decision ownership
 
@@ -105,6 +106,28 @@ Every briefing has the same headings, so the Director reads all departments the 
 | Log entry | The ID of the department-log entry |
 
 The secretary writes `not given` for anything the Lead did not send; it never fills gaps itself.
+
+## File access (sandboxed)
+
+Most agents have no file or shell tools: they work only through the lab tools. Omnigent grants
+file and shell tools (`sys_os_read`, `sys_os_write`, `sys_os_edit`, `sys_os_shell`) only to agents
+whose `config.yaml` has an `os_env` block, and runs them in a sandbox (Seatbelt on macOS, bwrap on
+Linux). Six agents have one:
+
+| Agent | Why | Writes | Network |
+|---|---|---|---|
+| `experiment_runner_specialist` | writes `run.py` | `runs/` only | no |
+| `knowledge_memory_specialist` | reads every `results.csv`, writes and runs `merge.py` | `runs/` only | no |
+| `knowledge_memory` (Lead) | writes `cycle_<n>.md`, `final_report.md` | `runs/` only | no |
+| `experiment_runner` (Lead) | checks `run.py`, `results.csv`, `output.log` | none | no |
+| `analysis_specialist` | reads this cycle's `results.csv` | none | no |
+| `review_safety_specialist` | checks numbers against the CSV files | none | no |
+
+Tested: writes inside `runs/` succeed, writes elsewhere fail with "Operation not permitted", the
+repo can be read, and network requests are blocked. Lab tools (`run_experiment`, `read_paper`, …)
+run outside this sandbox. Inside it, `python3` is the system Python without numpy, so `merge.py`
+uses only the standard library and `lab.csv_helper`; `run.py` is run by `run_experiment`, which
+uses Omnigent's Python.
 
 ## Log permissions
 
@@ -240,8 +263,6 @@ Files from runs: see "Run output" above. Each experiment can be rerun with `pyth
 its folder.
 
 Open questions:
-- The Experiment Runner specialist runs code it writes itself. Give it a sandbox in its
-  `config.yaml` (`os_env.sandbox`: write only to `runs/`, no network) before enabling it.
 - Agents pass `run_id` to the record and log tools themselves; it defaults to `"default"`. The
   Director should state the run ID in every task.
 - The shared record has no field for the cycle number or kind for common knowledge. For now the
@@ -322,7 +343,7 @@ Record kinds (shared contract): `literature`, `hypothesis`, `plan`, `experiment`
 Run this from the repo root or this folder to verify the entire hierarchy and discovered tools:
 
 ```bash
-python3 -c "
+~/.local/share/uv/tools/omnigent/bin/python3 -c "
 from pathlib import Path
 from omnigent.spec.parser import parse
 def show(s, d=0):
@@ -438,6 +459,11 @@ or code. Reference them as `${VAR}` in agent configs.
 ## Change log
 
 Newest first.
+
+- **Sandboxed file access for six agents.** Tonight's runs showed that no agent had file or shell
+  tools, so the Experiment Runner could not write `run.py` and Knowledge & Memory could not write
+  `merge.py` or its reports. Those agents, plus the three that read CSV files, now have an
+  `os_env` block; see "File access (sandboxed)". Their prompts have a "File tools" section.
 
 - **Literature specialist reads papers with `read_paper`.** The smoke test (run `smoke01`)
   could not verify any design because the specialist had no access to abstracts or full text.

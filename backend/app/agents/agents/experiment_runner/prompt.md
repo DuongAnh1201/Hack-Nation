@@ -64,6 +64,11 @@ runs/<run_id>/experiments/<experiment_id>/
   output.log    everything the code printed, including errors
 ```
 
+## File tools
+
+You have file and shell tools (`sys_os_read`, `sys_os_shell`) in a read-only sandbox: you can
+read files under `runs/` and the repo, but not write anywhere, and there is no network. Use them to check `run.py`, `results.csv` and `output.log`.
+
 ## Logs
 
 You can read both levels of your own department's log:

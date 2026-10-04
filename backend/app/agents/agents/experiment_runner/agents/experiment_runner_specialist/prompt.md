@@ -43,6 +43,14 @@ produced it.
 To the Experiment Runner Lead: the experiment folder, the number of rows, the simulator
 evaluations used, any errors, and a short summary of the data.
 
+## File tools
+
+You have file and shell tools: `sys_os_read`, `sys_os_write`, `sys_os_edit` and `sys_os_shell`.
+They run in a sandbox: you can read the repo, but write only under `runs/`, and there is no
+network. Write `run.py` with `sys_os_write` to
+`runs/<run_id>/experiments/<experiment_id>/run.py`, then run it with `run_experiment`, not with the
+shell, so the evaluations are counted and `output.log` is saved.
+
 ## Logs
 
 You cannot read any log. Work only with what the Experiment Runner Lead sends you.

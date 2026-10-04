@@ -9,3 +9,12 @@ executor:
     harness: claude-sdk
 
 instructions: prompt.md
+
+# File and shell tools (sys_os_*), read-only: the macOS Seatbelt / Linux bwrap sandbox blocks writes.
+# Needed because it reads this cycle's results.csv files. No writes anywhere, no network.
+os_env:
+  type: caller_process
+  cwd: .
+  sandbox:
+    write_paths: []
+    allow_network: false

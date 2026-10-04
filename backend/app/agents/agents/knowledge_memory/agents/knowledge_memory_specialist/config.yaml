@@ -9,3 +9,12 @@ executor:
     harness: claude-sdk
 
 instructions: prompt.md
+
+# File and shell tools (sys_os_read/write/edit/shell) in a macOS Seatbelt / Linux bwrap sandbox:
+# Needed because it reads every results.csv, writes and runs knowledge/merge.py. Writes only under runs/, no network. Lab tools run outside this sandbox.
+os_env:
+  type: caller_process
+  cwd: .
+  sandbox:
+    write_paths: ["runs"]
+    allow_network: false
