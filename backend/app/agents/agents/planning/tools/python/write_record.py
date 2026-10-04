@@ -1,7 +1,9 @@
 from omnigent_client import tool
 from lab.tools import write_record as _write_record
 
-@tool
+# strict=False: in strict mode a `dict` parameter becomes an object with no allowed
+# properties, so every field the agent sends is rejected.
+@tool(strict=False)
 def write_record(kind: str, agent: str, content: dict, based_on: list = None, run_id: str = 'default') -> dict:
     """Append a structured epistemic entry to the shared research record (record.jsonl)."""
     return _write_record(kind=kind, agent=agent, content=content, based_on=based_on, run_id=run_id)

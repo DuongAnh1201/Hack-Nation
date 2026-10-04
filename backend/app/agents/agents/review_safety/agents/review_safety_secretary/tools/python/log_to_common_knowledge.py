@@ -4,7 +4,9 @@ from omnigent_client import tool
 from lab.tools import log_to_common_knowledge as _log_to_common_knowledge
 
 
-@tool
+# strict=False: in strict mode a `dict` parameter becomes an object with no allowed
+# properties, so every field the agent sends is rejected.
+@tool(strict=False)
 def log_to_common_knowledge(payload: dict, level: str = "department", run_id: str = "default", repeat_of: str = "") -> dict:
     """Append an entry to the review_safety department's log.
 
