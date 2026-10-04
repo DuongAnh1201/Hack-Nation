@@ -1,0 +1,141 @@
+name: physics_ai_lab
+description: "Autonomous Agentic Physics Discovery Lab investigating optimal projectile launch angles under quadratic drag."
+
+prompt: |
+  You are the Research Planner leading an autonomous scientific discovery laboratory.
+  Your mission is to investigate:
+  "For a projectile launched from level ground with quadratic air drag, how does the range-maximising launch angle theta* depend on speed, mass, size, drag coefficient, air density and gravity? Is there a compact law that predicts theta* for unseen conditions within 0.1 deg?"
+
+  Follow the scientific discovery cycle:
+  1. Coordinate with your specialist sub-agents (literature_agent, hypothesis_agent, experiment_planner, analysis_agent).
+  2. Respect the safety gate policies: never request more than 400 simulations without approval.
+  3. Formulate hypotheses, design revealing tests, analyze results, adapt your plan, and conclude with hold-out validation.
+  4. Record every decision and conclusion in the shared research record.
+
+policies:
+  experiment_gate:
+    type: function
+    handler: physics_lab.policies:experiment_gate
+
+tools:
+  record_note:
+    type: function
+    description: "Record an observation, assumption, or question in the shared research record."
+    callable: physics_lab.tools:record_note
+
+  record_decision:
+    type: function
+    description: "Record an executive scientific decision justifying the next step based on prior evidence."
+    callable: physics_lab.tools:record_decision
+
+  record_conclusion:
+    type: function
+    description: "Record the final scientific conclusion with holdout error and stated limitations."
+    callable: physics_lab.tools:record_conclusion
+
+  read_record:
+    type: function
+    description: "Read an entry or view a summary of the shared research record."
+    callable: physics_lab.tools:read_record
+
+  literature_agent:
+    type: agent
+    description: "Literature specialist who establishes baseline facts, identifies prior knowledge, and queries academic literature."
+    prompt: "You are the Literature Agent. Query OpenAlex and record established textbook physics facts with citations into the research record."
+    tools:
+      get_established_facts:
+        type: function
+        description: "Retrieve established physics facts with citations regarding projectile motion and drag."
+        callable: physics_lab.tools:get_established_facts
+      search_literature:
+        type: function
+        description: "Search OpenAlex for academic literature, citations, and prior art."
+        callable: physics_lab.tools:search_literature
+      record_note:
+        type: function
+        description: "Record an observation, assumption, or question in the shared research record."
+        callable: physics_lab.tools:record_note
+      read_record:
+        type: function
+        description: "Read an entry or view a summary of the shared research record."
+        callable: physics_lab.tools:read_record
+
+  hypothesis_agent:
+    type: agent
+    description: "Theoretical physicist who formulates testable mathematical hypotheses and parameter reduction theories."
+    prompt: "You are the Hypothesis Agent. Propose mathematical laws and parameter reduction hypotheses based on evidence."
+    tools:
+      propose_hypothesis:
+        type: function
+        description: "Propose a testable hypothesis or candidate physical law."
+        callable: physics_lab.tools:propose_hypothesis
+      fit_laws:
+        type: function
+        description: "Fit candidate physical laws against empirical measurements using Leave-One-Out cross-validation."
+        callable: physics_lab.tools:fit_laws
+      read_record:
+        type: function
+        description: "Read an entry or view a summary of the shared research record."
+        callable: physics_lab.tools:read_record
+
+  experiment_planner:
+    type: agent
+    description: "Experimental designer who constructs parameter sets, controls, and conditions to discriminate hypotheses."
+    prompt: "You are the Experiment Planner. Design revealing tests and controls, review safety, and run simulations."
+    tools:
+      review_experiment:
+        type: function
+        description: "Conduct safety and compute review of an experimental specification before execution."
+        callable: physics_lab.tools:review_experiment
+      run_experiment:
+        type: function
+        description: "Execute an approved experiment specification and record measurements."
+        callable: physics_lab.tools:run_experiment
+      simulate_once:
+        type: function
+        description: "Run a single projectile simulation and return measurements and trajectory frames."
+        callable: physics_lab.tools:simulate_once
+      suggest_next_experiment:
+        type: function
+        description: "Analyze model disagreement to suggest the most informative next experimental condition."
+        callable: physics_lab.tools:suggest_next_experiment
+      read_record:
+        type: function
+        description: "Read an entry or view a summary of the shared research record."
+        callable: physics_lab.tools:read_record
+
+  safety_agent:
+    type: agent
+    description: "Safety and ethics officer verifying compute budgets, parameter validity, and human approval gates."
+    prompt: "You are the Safety Officer. Review experiment plans against compute budgets and physical validity."
+    tools:
+      review_experiment:
+        type: function
+        description: "Conduct safety and compute review of an experimental specification before execution."
+        callable: physics_lab.tools:review_experiment
+      read_record:
+        type: function
+        description: "Read an entry or view a summary of the shared research record."
+        callable: physics_lab.tools:read_record
+
+  analysis_agent:
+    type: agent
+    description: "Data analyst and statistician who grades hypotheses, fits candidate laws, and identifies model disagreement."
+    prompt: "You are the Analysis Agent. Evaluate experiment results, fit candidate laws, and update hypothesis statuses."
+    tools:
+      fit_laws:
+        type: function
+        description: "Fit candidate physical laws against empirical measurements using Leave-One-Out cross-validation."
+        callable: physics_lab.tools:fit_laws
+      update_hypothesis:
+        type: function
+        description: "Update the status of a hypothesis (supported, refuted, inconclusive) with rationale."
+        callable: physics_lab.tools:update_hypothesis
+      suggest_next_experiment:
+        type: function
+        description: "Analyze model disagreement to suggest the most informative next experimental condition."
+        callable: physics_lab.tools:suggest_next_experiment
+      read_record:
+        type: function
+        description: "Read an entry or view a summary of the shared research record."
+        callable: physics_lab.tools:read_record

@@ -200,26 +200,31 @@ Record kinds (shared contract): `literature`, `hypothesis`, `plan`, `experiment`
 
 ## Check the bundle
 
-Run this from this folder. It parses the whole tree with Omnigent's own loader and prints who can
-call whom:
+Run this from the repo root or this folder to verify the entire hierarchy and discovered tools:
 
 ```bash
-~/.local/share/uv/tools/omnigent/bin/python3 -c "
+python3 -c "
 from pathlib import Path
 from omnigent.spec.parser import parse
 def show(s, d=0):
-    print('  '*d + s.name, '->', s.tools.agents if s.tools else [])
+    lt = [t.name for t in s.local_tools]
+    ag = s.tools.agents if s.tools else []
+    print('  '*d + s.name, '->', ag, f'[local tools: {lt}]')
     for c in s.sub_agents: show(c, d+1)
-show(parse(Path('.')))"
+show(parse(Path('backend/app/agents')))"
 ```
 
 A malformed `config.yaml` makes this fail and names the file. If an agent prints its prompt path
 instead of the prompt text, its `prompt.md` is missing or misnamed.
 
-## Tools
-
 The simulator (`simulate_stack`, `optimize_thicknesses`), the record tools (`read_record`,
-`write_record`) and the log tools are tools, not agents. Omnigent finds local tools in
-`tools/python/*.py` inside each agent's folder, which is also how log permissions are enforced:
-an agent can only call the tools in its own folder. [tools/literature_review.py](tools/literature_review.py)
-is not in that path yet, so Omnigent does not load it.
+`write_record`), paper search (`search_papers`), material properties (`list_materials`, `material_properties`),
+and knowledge logging tools (`log_to_common_knowledge`, `read_common_knowledge`) are deterministic tools
+implemented in [lab/tools.py](../../../../lab/tools.py).
+
+Omnigent finds local tools in `tools/python/*.py` inside each agent's folder, which is also how tool
+permissions are enforced:
+- **Specialists** carry domain execution tools (e.g. `literature_specialist` uses `search_papers`, `hypothesis_specialist` uses `list_materials`/`material_properties`, `analysis_specialist` uses `simulate_stack`/`optimize_thicknesses`).
+- **Secretaries** carry logging tools (`log_to_common_knowledge`, `write_record`) and act as internal briefing officers for Department Leads.
+- **Department Leads & Director** coordinate delegation and review via `read_record`.
+

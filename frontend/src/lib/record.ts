@@ -171,9 +171,11 @@ export const AGENTS: Record<string, { name: string; color: string }> = {
   literature_agent: { name: "Literature", color: "#b794f6" },
   hypothesis_agent: { name: "Hypothesis", color: "#f472b6" },
   planner: { name: "Planner", color: "#fbbf24" },
+  experiment_runner: { name: "Runner", color: "#38bdf8" },
   analyst: { name: "Analyst", color: "#2dd4bf" },
   safety: { name: "Safety", color: "#fb923c" },
 };
+
 
 export function agentInfo(agent: string) {
   return AGENTS[agent] ?? { name: agent, color: "#94a3b8" };

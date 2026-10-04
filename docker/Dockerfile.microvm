@@ -1,0 +1,36 @@
+# Micro-VM Sandbox for Radiative Cooling Scientific Discovery
+# Used with Docker Sandboxes (`sbx --cloud` or local container isolation)
+
+FROM python:3.12-slim
+
+# Avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Install baseline utilities
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /home/agent/workspace
+
+# Install core scientific and simulator dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    numpy \
+    scipy \
+    tmm \
+    pyyaml \
+    pvlib
+
+# Copy lab package and data into sandbox
+COPY lab /home/agent/workspace/lab
+COPY bench /home/agent/workspace/bench
+
+ENV PYTHONPATH=/home/agent/workspace
+
+# Default command: launch interactive python or agent worker
+CMD ["python3", "-c", "import lab.physics; print('Radiative Cooling Micro-VM Sandbox initialized. Search space:', lab.physics.SEARCH_SPACE)"]

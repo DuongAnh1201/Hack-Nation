@@ -1,0 +1,17 @@
+{
+  "target_w_m2": 11.827773867918992,
+  "budget": 20,
+  "seeds": 1,
+  "methods": {
+    "random": {
+      "evals_to_target": [
+        1
+      ],
+      "best_w_m2": [
+        43.671
+      ]
+    },
+    "bayes_opt": {},
+    "agent_lab": {}
+  }
+}
