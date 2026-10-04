@@ -1,7 +1,7 @@
 spec_version: 1
 name: hypothesis
 description: >-
-  Which materials, in what order, and why.
+  Decides which hypothesis the lab tests next: materials, order, and why.
 
 executor:
   type: omnigent
@@ -12,5 +12,6 @@ instructions: prompt.md
 
 tools:
   agents:
-    - hypothesis_physics
-    - hypothesis_materials
+    - hypothesis_review
+    - hypothesis_confidence
+    - hypothesis_secretary

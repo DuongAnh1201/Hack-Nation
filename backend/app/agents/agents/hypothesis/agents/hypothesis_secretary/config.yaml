@@ -1,7 +1,7 @@
 spec_version: 1
-name: hypothesis_materials
+name: hypothesis_secretary
 description: >-
-  Judges candidate materials from their n, k data, cost and availability.
+  Logs the Hypothesis Lead's decisions to the common knowledge base.
 
 executor:
   type: omnigent
