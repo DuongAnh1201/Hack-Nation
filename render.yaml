@@ -1,24 +1,26 @@
 # Render Blueprint: New > Blueprint in the Render dashboard, point it at this repo.
+# The backend runs the real agent lab: Dockerfile in the repo root (FastAPI + Omnigent + tmux).
 services:
   - type: web
     name: physics-study-api
-    runtime: python
-    plan: free # switch to "starter" ($7/mo) before demo day to remove cold starts
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # A run keeps the Omnigent server and several Claude agent sessions alive at once, and must not
+    # be stopped by sleep: free and starter (512 MB) are too small; standard has 2 GB.
+    plan: standard
     healthCheckPath: /health
     autoDeploy: true # redeploy on every push to main
+    disk:
+      name: lab-data
+      mountPath: /data # runs/ and ~/.omnigent, kept across redeploys (docker/render-start.sh)
+      sizeGB: 1
     envVars:
-      - key: PYTHON_VERSION
-        value: "3.12.7"
       - key: LAB_ALLOW_START
         value: "1"
-      - key: FRONTEND_ORIGINS
+      - key: FRONTEND_ORIGINS # comma-separated site origins, e.g. https://<your-site>.vercel.app
         sync: false
       - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: OPENAI_API_KEY
         sync: false
       - key: BRIGHTDATA_API_TOKEN
         sync: false
