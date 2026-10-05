@@ -114,9 +114,16 @@ Safety limits for a public link: starting and stopping need `LAB_ACCESS_CODE`, o
 active at a time, run IDs are restricted to letters, digits, `-` and `_`, and agent text is shown
 as plain text, never as HTML.
 
-**Public site without your laptop** (Vercel + Render): the same page, with "Start run" disabled.
-It shows runs whose folders are on the Render backend. `runs/` is git-ignored, so to publish a
-finished demo run, force-add it (`git add -f runs/<run_id>`) or copy it to the server.
+**Public site without your laptop** (Vercel + Render): Render runs the `Dockerfile` in the repo
+root, which has Omnigent, tmux and bwrap, so "Start run" starts the real agents there.
+`docker/render-start.sh` puts `runs/` and `~/.omnigent` on the persistent disk (`/data`), writes
+an Omnigent provider entry that reads `ANTHROPIC_API_KEY`, writes `BRIGHTDATA_API_TOKEN` to
+`.env`, runs `omni start`, then uvicorn. Set `ANTHROPIC_API_KEY`, `BRIGHTDATA_API_TOKEN` and
+`FRONTEND_ORIGINS` (the Vercel site's origin) in the Render dashboard. `GET /api/lab/status`
+lists anything missing (omni, tmux, the bwrap sandbox, the Omnigent server); the button stays
+disabled with that reason instead of starting a run that cannot work. There is no scripted
+fallback: a run is the agents' work or it does not start. Without `LAB_ACCESS_CODE` anyone with
+the link can start a run (one at a time), so set it once judging is over.
 
 ## Decision ownership
 
