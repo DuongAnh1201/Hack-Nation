@@ -1447,7 +1447,7 @@ requestAnimationFrame(frame);
     } catch (e) {
       note(`Backend error starting run: ${e.message}`, true);
     } finally {
-      el.start.disabled = !(status && status.can_start);
+      el.start.disabled = false;
     }
   });
   el.stop.addEventListener('click', async () => {
